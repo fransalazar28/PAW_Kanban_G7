@@ -5,6 +5,16 @@ VisualStudioVersion = 17.10.35013.160
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PAW_Kanban_G7", "PAW_Kanban_G7\PAW_Kanban_G7.csproj", "{87210E7C-7125-4788-BF4A-56B63AADF9A3}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "K.Data", "KanbanData\K.Data.csproj", "{E9EF0CBA-FEB7-477F-BEAE-0934590CE625}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "K.API", "Kanban.API\K.API.csproj", "{E38DC853-F921-4C63-934C-F11873CE071C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "K.Business", "K.Business\K.Business.csproj", "{07DEFDEA-90AE-444B-A8CB-411BD94813F9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "K.Repositories", "K.Repositories\K.Repositories.csproj", "{92525ED9-2B7F-4CA9-A5AE-0CB97E0CA86C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "K.Models", "K.Models\K.Models.csproj", "{0DCA1BDB-1BE0-4C12-92E6-E7465C9B9623}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +25,26 @@ Global
 		{87210E7C-7125-4788-BF4A-56B63AADF9A3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{87210E7C-7125-4788-BF4A-56B63AADF9A3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{87210E7C-7125-4788-BF4A-56B63AADF9A3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E9EF0CBA-FEB7-477F-BEAE-0934590CE625}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E9EF0CBA-FEB7-477F-BEAE-0934590CE625}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E9EF0CBA-FEB7-477F-BEAE-0934590CE625}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E9EF0CBA-FEB7-477F-BEAE-0934590CE625}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E38DC853-F921-4C63-934C-F11873CE071C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E38DC853-F921-4C63-934C-F11873CE071C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E38DC853-F921-4C63-934C-F11873CE071C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E38DC853-F921-4C63-934C-F11873CE071C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{07DEFDEA-90AE-444B-A8CB-411BD94813F9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{07DEFDEA-90AE-444B-A8CB-411BD94813F9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{07DEFDEA-90AE-444B-A8CB-411BD94813F9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{07DEFDEA-90AE-444B-A8CB-411BD94813F9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{92525ED9-2B7F-4CA9-A5AE-0CB97E0CA86C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{92525ED9-2B7F-4CA9-A5AE-0CB97E0CA86C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{92525ED9-2B7F-4CA9-A5AE-0CB97E0CA86C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{92525ED9-2B7F-4CA9-A5AE-0CB97E0CA86C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0DCA1BDB-1BE0-4C12-92E6-E7465C9B9623}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0DCA1BDB-1BE0-4C12-92E6-E7465C9B9623}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0DCA1BDB-1BE0-4C12-92E6-E7465C9B9623}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0DCA1BDB-1BE0-4C12-92E6-E7465C9B9623}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
