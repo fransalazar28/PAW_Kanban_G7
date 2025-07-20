@@ -1,0 +1,58 @@
+CREATE TABLE Usuarios (
+  UsuarioId INT IDENTITY(1,1) PRIMARY KEY,
+  NombreUsuario NVARCHAR(50) NOT NULL UNIQUE,
+  Email NVARCHAR(100) NOT NULL UNIQUE,
+  PasswordHash NVARCHAR(200) NOT NULL,
+  FechaCreacion DATETIME2 NOT NULL DEFAULT GETDATE()
+);
+
+
+CREATE TABLE Tableros (
+  TableroId INT IDENTITY(1,1) PRIMARY KEY,
+  Titulo NVARCHAR(100) NOT NULL,
+  Descripcion NVARCHAR(500) NULL,
+  UsuarioId INT NOT NULL REFERENCES Usuarios(UsuarioId),
+  FechaCreacion DATETIME2 NOT NULL DEFAULT GETDATE()
+);
+
+
+CREATE TABLE Columnas (
+  ColumnaId INT IDENTITY(1,1) PRIMARY KEY,
+  Nombre NVARCHAR(50) NOT NULL,
+  Orden INT NOT NULL,
+  TableroId INT NOT NULL REFERENCES Tableros(TableroId)
+);
+
+
+CREATE TABLE HistoriasUsuario (
+  HistoriaId INT IDENTITY(1,1) PRIMARY KEY,
+  Titulo NVARCHAR(150) NOT NULL,
+  Descripcion NVARCHAR(MAX) NULL,
+  Estado NVARCHAR(50) NOT NULL,
+  ColumnaId INT NOT NULL REFERENCES Columnas(ColumnaId),
+  ResponsableId INT NULL REFERENCES Usuarios(UsuarioId),
+  FechaCreacion DATETIME2 NOT NULL DEFAULT GETDATE(),
+  FechaVencimiento DATE NULL
+);
+
+
+CREATE TABLE Comentarios (
+  ComentarioId INT IDENTITY(1,1) PRIMARY KEY,
+  HistoriaId INT NOT NULL REFERENCES HistoriasUsuario(HistoriaId),
+  UsuarioId INT NOT NULL REFERENCES Usuarios(UsuarioId),
+  Texto NVARCHAR(MAX) NOT NULL,
+  FechaRegistro DATETIME2 NOT NULL DEFAULT GETDATE()
+);
+
+
+CREATE TABLE Etiquetas (
+  EtiquetaId INT IDENTITY(1,1) PRIMARY KEY,
+  Nombre NVARCHAR(50) NOT NULL UNIQUE,
+  Color NVARCHAR(20) NULL
+);
+
+CREATE TABLE HistoriaEtiqueta (
+  HistoriaId INT NOT NULL REFERENCES HistoriasUsuario(HistoriaId),
+  EtiquetaId INT NOT NULL REFERENCES Etiquetas(EtiquetaId),
+  PRIMARY KEY (HistoriaId, EtiquetaId)
+);
