@@ -1,0 +1,69 @@
+@model K.Models.WidgetConfig
+
+@{
+    ViewData["Title"] = "Editar Widget";
+}
+
+<h1>Editar Widget</h1>
+
+<form asp-action="Edit">
+    <input type="hidden" asp-for="Id" />
+
+    <div class="form-group">
+        <label asp-for="Nombre"></label>
+        <input asp-for="Nombre" class="form-control" />
+        <span asp-validation-for="Nombre" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Tipo"></label>
+        <input asp-for="Tipo" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="UrlApi"></label>
+        <input asp-for="UrlApi" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="ApiKey"></label>
+        <input asp-for="ApiKey" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="TiempoRefresco"></label>
+        <input asp-for="TiempoRefresco" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Tamaño"></label>
+        <input asp-for="Tamaño" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Posicion"></label>
+        <input asp-for="Posicion" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Visibilidad"></label>
+        <select asp-for="Visibilidad" class="form-control">
+            <option value="público">Público</option>
+            <option value="privado">Privado</option>
+            <option value="grupo">Grupo</option>
+        </select>
+    </div>
+
+    <div class="form-check mt-2">
+        <input asp-for="Favorito" class="form-check-input" />
+        <label asp-for="Favorito" class="form-check-label">¿Es favorito?</label>
+    </div>
+
+    <div class="form-check mb-3">
+        <input asp-for="Oculto" class="form-check-input" />
+        <label asp-for="Oculto" class="form-check-label">¿Está oculto?</label>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Guardar cambios</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+</form>

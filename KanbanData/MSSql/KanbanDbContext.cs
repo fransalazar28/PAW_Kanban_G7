@@ -20,6 +20,8 @@ namespace K.Data.MSSql
         public virtual DbSet<Comentario> Comentarios { get; set; }
         public virtual DbSet<Etiqueta> Etiquetas { get; set; }
         public virtual DbSet<HistoriaEtiqueta> HistoriaEtiqueta { get; set; }
+        public DbSet<WidgetConfig> WidgetConfigs { get; set; }
+
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning Considera mover la cadena de conexión a tu configuración (appsettings.json)

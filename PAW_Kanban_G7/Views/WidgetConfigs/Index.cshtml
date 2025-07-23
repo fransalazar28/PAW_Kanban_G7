@@ -1,0 +1,39 @@
+@model IEnumerable<K.Models.WidgetConfig>
+
+    @{
+    ViewData["Title"] = "Mis Widgets";
+    }
+
+    <h1>Mis Widgets</h1>
+
+    <p>
+        <a asp-action="Create" class="btn btn-primary">Crear nuevo widget</a>
+    </p>
+
+    <table class="table table-bordered table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>Nombre</th>
+                <th>Tipo</th>
+                <th>API</th>
+                <th>Favorito</th>
+                <th>Oculto</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model) {
+            <tr class="@(item.Favorito ? "table-warning" : "")">
+                <td>@item.Nombre</td>
+                <td>@item.Tipo</td>
+                <td>@item.UrlApi</td>
+                <td>@(item.Favorito ? "Si" : "No")</td>
+                <td>@(item.Oculto ? "Si" : "No")</td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@item.Id">Editar</a> |
+                    <a asp-action="Delete" asp-route-id="@item.Id">Eliminar</a>
+                </td>
+            </tr>
+}
+        </tbody>
+    </table>
