@@ -1,4 +1,4 @@
-namespace Kanban.API
+namespace K2.API
 {
     public class WeatherForecast
     {

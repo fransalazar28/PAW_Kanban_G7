@@ -21,14 +21,14 @@ namespace K.Models
         [JsonPropertyName("fechaCreacion")]
         public DateTime FechaCreacion { get; set; }
 
-        // Las colecciones de navegación van con JsonIgnore para no serializar bucles
         [JsonIgnore]
         public virtual ICollection<Tablero> Tableros { get; set; } = new List<Tablero>();
 
         [JsonIgnore]
         public virtual ICollection<Comentario> Comentarios { get; set; } = new List<Comentario>();
 
+
         [JsonIgnore]
-        public virtual ICollection<HistoriaUsuario> HistoriasAsignadas { get; set; } = new List<HistoriaUsuario>();
+        public virtual ICollection<Historia> HistoriasAsignadas { get; set; } = new List<Historia>();
     }
 }

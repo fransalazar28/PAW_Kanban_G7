@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 
-namespace Kanban.API.Controllers
+namespace K2.API.Controllers
 {
     [ApiController]
     [Route("[controller]")]

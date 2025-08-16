@@ -1,0 +1,152 @@
+﻿@model int
+@{
+    ViewData["Title"] = "Board";
+    var apiBase = "https://localhost:7291"; // puerto real de tu API
+}
+
+<h1>Board (@Model)</h1>
+<button id="btn-add" class="btn btn-primary" disabled>+ Nueva historia</button>
+
+<div id="board" class="board"></div>
+
+<style>
+    .board {
+        display: grid;
+        grid-template-columns: repeat(4,minmax(260px,1fr));
+        gap: 1rem;
+        margin-top: 1rem
+    }
+
+    .column {
+        background: #f4f5f7;
+        border-radius: 12px;
+        padding: .5rem
+    }
+
+        .column h3 {
+            margin: .25rem 0 .5rem
+        }
+
+        .column ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            min-height: 240px
+        }
+
+        .column li {
+            background: #fff;
+            margin: .5rem 0;
+            padding: .5rem;
+            border-radius: 8px;
+            box-shadow: 0 1px 2px rgba(0,0,0,.08)
+        }
+</style>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+    <script>
+        const API_BASE = "@apiBase";
+        const tableroId = @Model;
+
+        let columnasPorNombre = {}; // p.ej. { 'backlog': 1, 'in progress': 2, ... }
+
+        async function loadBoard() {
+            const container = document.getElementById('board');
+            container.innerHTML = '';
+            try {
+                const res = await fetch(`${API_BASE}/api/historias/board/${tableroId}`);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = await res.json();
+
+                // Mapa "nombre -> id" para Backlog, etc.
+                columnasPorNombre = {};
+                data.columnas.forEach(c => columnasPorNombre[(c.nombre || '').toLowerCase()] = c.columnaId);
+
+                // Render columnas + tarjetas
+                for (const col of data.columnas) {
+                    const colDiv = document.createElement('div');
+                    colDiv.className = 'column';
+
+                    const h3 = document.createElement('h3');
+                    h3.textContent = col.nombre;
+
+                    const ul = document.createElement('ul');
+                    ul.dataset.columnaId = col.columnaId;
+
+                    for (const h of col.historias) {
+                        const li = document.createElement('li');
+                        li.dataset.id = h.historiaId;
+                        li.textContent = h.titulo;
+                        ul.appendChild(li);
+                    }
+
+                    colDiv.appendChild(h3);
+                    colDiv.appendChild(ul);
+                    container.appendChild(colDiv);
+                }
+
+                // Drag & drop
+                document.querySelectorAll('[data-columna-id]').forEach(list => {
+                    new Sortable(list, {
+                        group: 'board',
+                        animation: 150,
+                        onEnd: async (e) => {
+                            const historiaId = +e.item.dataset.id;
+                            const newColId = +e.to.dataset.columnaId;
+                            const newIndex = e.newIndex;
+
+                            const r = await fetch(`${API_BASE}/api/historias/${historiaId}/status`, {
+                                method: 'PATCH',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ columnaId: newColId, newIndex })
+                            });
+                            if (!r.ok && r.status !== 204) {
+                                alert('No se pudo mover la tarjeta');
+                                return;
+                            }
+                            // Refresca para ver todo normalizado
+                            await loadBoard();
+                        }
+                    });
+                });
+
+                // habilita el botón al terminar de cargar
+                document.getElementById('btn-add').disabled = false;
+
+            } catch (err) {
+                console.error(err);
+                container.innerHTML = `<p>Error de JS (ver consola)</p>`;
+            }
+        }
+
+        document.getElementById('btn-add').addEventListener('click', async () => {
+            const titulo = prompt('Título de la historia:');
+            if (!titulo) return;
+
+            // Backlog por nombre (fallback: primera columna)
+            const backlogId = columnasPorNombre['backlog']
+                ?? document.querySelector('[data-columna-id]')?.dataset.columnaId;
+            if (!backlogId) { alert('No encuentro la columna Backlog'); return; }
+
+            const res = await fetch(`${API_BASE}/api/historias`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    titulo,
+                    descripcion: null,
+                    columnaId: +backlogId,
+                    responsableId: null
+                })
+            });
+
+            if (!res.ok) {
+                alert('No se pudo crear la historia');
+                return;
+            }
+            await loadBoard();
+        });
+
+        document.addEventListener('DOMContentLoaded', loadBoard);
+    </script>
+}

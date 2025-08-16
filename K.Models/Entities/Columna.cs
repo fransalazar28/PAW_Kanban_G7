@@ -1,6 +1,4 @@
-﻿// Columna.cs
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
 namespace K.Models
@@ -23,6 +21,6 @@ namespace K.Models
         public virtual Tablero Tablero { get; set; } = null!;
 
         [JsonIgnore]
-        public virtual ICollection<HistoriaUsuario> HistoriasUsuario { get; set; } = new HashSet<HistoriaUsuario>();
+        public virtual ICollection<Historia> Historias { get; set; } = new List<Historia>();
     }
 }

@@ -1,5 +1,4 @@
-﻿// HistoriaEtiqueta.cs
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
 namespace K.Models
@@ -14,7 +13,7 @@ namespace K.Models
         public int EtiquetaId { get; set; }
 
         [JsonIgnore]
-        public virtual HistoriaUsuario HistoriaUsuario { get; set; } = null!;
+        public virtual Historia Historia { get; set; } = null!;
 
         [JsonIgnore]
         public virtual Etiqueta Etiqueta { get; set; } = null!;

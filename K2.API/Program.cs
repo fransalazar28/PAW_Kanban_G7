@@ -7,13 +7,17 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Registra el DbContext (usa OnConfiguring del DbContext)
+
+builder.Services.AddCors(o => o.AddPolicy("mvc", p =>
+    p.WithOrigins("https://localhost:7154", "http://localhost:5132")
+     .AllowAnyHeader()
+     .AllowAnyMethod()
+));
+
+
 builder.Services.AddDbContext<KanbanDbContext>();
 
-/*  Alternativa si prefieres usar appsettings.json:
-builder.Services.AddDbContext<KanbanDbContext>(opt =>
-    opt.UseSqlServer(builder.Configuration.GetConnectionString("KanbanDB")));
-*/
+
 
 var app = builder.Build();
 
@@ -24,7 +28,14 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+
+app.UseCors("mvc");
+
 app.UseAuthorization();
 app.MapControllers();
+
+
+app.MapGet("/ping", () => Results.Ok("pong"));
 
 app.Run();
