@@ -1,23 +1,39 @@
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using K.Data.MSSql;
-using Microsoft.EntityFrameworkCore;
+using K.Business;
+using K.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
+
+builder.Services.AddControllers()
+    .AddJsonOptions(o =>
+    {
+        o.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+        o.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+    });
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 
 builder.Services.AddCors(o => o.AddPolicy("mvc", p =>
-    p.WithOrigins("https://localhost:7154", "http://localhost:5132")
-     .AllowAnyHeader()
-     .AllowAnyMethod()
+    p.WithOrigins(
+        "https://localhost:7154",  
+        "http://localhost:5132"    
+    )
+    .AllowAnyHeader()
+    .AllowAnyMethod()
+
 ));
 
 
 builder.Services.AddDbContext<KanbanDbContext>();
 
 
+builder.Services.AddScoped<IHistoriaRepository, HistoriaRepository>();
+builder.Services.AddScoped<IHistoriaService, HistoriaService>();
 
 var app = builder.Build();
 
@@ -32,7 +48,9 @@ app.UseHttpsRedirection();
 
 app.UseCors("mvc");
 
+
 app.UseAuthorization();
+
 app.MapControllers();
 
 
