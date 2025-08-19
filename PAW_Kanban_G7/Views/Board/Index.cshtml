@@ -87,7 +87,7 @@
                             <input id="etqColor" class="form-control" value="8ED1FC" />
                         </div>
 
-                        <!-- Popover con paleta -->
+                        <!-- Popover con paleta (tipo Twitter) -->
                         <div id="colorPopover" class="color-popover" hidden>
                             <div id="swatchGrid" class="swatch-grid"></div>
                             <div class="swatch-footer">
@@ -150,78 +150,87 @@
         margin-top: 0 !important;
     }
 
-    /* ======= Tema ======= */
+    /* ======= Tema (Imaginal Disk) ======= */
     :root {
-        --bg-01: #f7fbff;
-        --bg-02: #eef7ff;
-        --glow-1: #9BE8FF;
-        --glow-2: #E6E1FF;
-        --text-1: #244056;
-        --text-2: #587a95;
+        --bg-01: #F5F8FF;
+        --bg-02: #EEF0FF;
+        --blob-cyan: #8BE7FF;
+        --blob-lilac: #C1B3FF;
+        --ink-1: #1a2f4d;
+        --ink-2: #4a6a89;
+        --panel-bg: #ffffffd0;
+        --panel-bd: #e7ecf5;
+        --card-bg: #fff;
+        --card-bd: #e7ecf5;
         --chip-border: #8dc9ff55;
-        --card-bg: #ffffffee;
-        --card-border: #dfeaff;
-        --col-bg: #ffffffcc;
-        --col-border: #d9e9ff;
+        /* ===== Ajustes del picker estilo Twitter ===== */
+        --swatch: 28px; /* tamaño cuadrado */
+        --sw-gap: 8px; /* separación */
+        --picker-w: 276px; /* ancho popover */
     }
 
     body {
-        background: radial-gradient(1200px 800px at 10% -10%, #c8ebff66 0%, transparent 60%), radial-gradient(900px 650px at 100% 0%, #e8e1ff66 0%, transparent 55%), linear-gradient(160deg, var(--bg-01), var(--bg-02)) fixed;
-        color: var(--text-1);
-        font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+        background: radial-gradient(1100px 700px at 8% -6%, color-mix(in lab, var(--blob-cyan) 35%, transparent) 0%, transparent 60%), radial-gradient(900px 650px at 95% -10%, color-mix(in lab, var(--blob-lilac) 35%, transparent) 0%, transparent 58%), linear-gradient(160deg,var(--bg-01),var(--bg-02)) fixed;
+        color: var(--ink-1);
+        font-family: "Segoe UI",Tahoma,Arial,sans-serif;
     }
 
     h1 {
-        font-weight: 800;
-        letter-spacing: .3px;
         margin-top: .5rem;
-        background: linear-gradient(90deg, var(--glow-1), var(--glow-2));
-        -webkit-background-clip: text;
-        background-clip: text;
-        color: transparent;
-        text-shadow: 0 0 12px #9be8ff30;
+        font-weight: 900;
+        letter-spacing: .2px;
+        color: var(--ink-1);
+        text-shadow: 0 1px 0 #fff;
     }
 
     .btn-primary {
         border: 0;
-        background: linear-gradient(90deg,var(--glow-1),var(--glow-2));
-        color: #07324b;
-        font-weight: 700;
-        box-shadow: 0 8px 18px #9bd6ff33, inset 0 0 0 1px #fff;
+        background: linear-gradient(90deg,#5798ff,#a78bfa);
+        color: #fff;
+        font-weight: 800;
+        box-shadow: 0 10px 22px rgba(87,152,255,.25);
     }
 
+        .btn-primary:hover {
+            filter: brightness(1.05);
+            box-shadow: 0 12px 28px rgba(87,152,255,.35);
+        }
+
     .btn-outline-secondary {
-        border-color: #a9cfff;
-        color: #21506b;
+        border-color: #bcd4ff;
+        color: #254a67;
         background: #fff;
     }
 
-    .btn-primary:hover {
-        filter: brightness(1.05) saturate(1.03);
-    }
+        .btn-outline-secondary:hover {
+            background: #f3f7ff;
+        }
 
-    .btn-outline-secondary:hover {
-        background: #f4faff;
-    }
-
+    /* ===== Board ===== */
     .board {
         display: grid;
         grid-template-columns: repeat(4,minmax(260px,1fr));
         gap: 1.2rem;
+        background: var(--panel-bg);
+        border: 1px solid var(--panel-bd);
+        border-radius: 20px;
+        padding: 1rem;
+        box-shadow: 0 24px 60px rgba(32,64,128,.16),0 2px 6px rgba(32,64,128,.06);
+        backdrop-filter: blur(8px) saturate(1.05);
     }
 
     .column {
-        background: var(--col-bg);
-        border: 1px solid var(--col-border);
+        background: transparent;
+        border: 0;
         border-radius: 16px;
         padding: .9rem;
-        box-shadow: 0 10px 26px rgba(44,95,150,.08);
+        box-shadow: none;
     }
 
         .column h3 {
             margin: .15rem 0 1rem;
-            color: #1d3a4f;
-            font-weight: 800;
+            color: var(--ink-1);
+            font-weight: 900;
             letter-spacing: .2px;
             display: flex;
             align-items: center;
@@ -233,7 +242,7 @@
                 height: 3px;
                 flex: 1;
                 border-radius: 999px;
-                background: linear-gradient(90deg, #dfeeff, #ffffff00);
+                background: linear-gradient(90deg,#e8eeff,#ffffff00);
             }
 
         .column ul {
@@ -245,12 +254,12 @@
 
     .card-item {
         background: var(--card-bg);
-        border: 1px solid var(--card-border);
+        border: 1px solid var(--card-bd);
         margin: .6rem 0;
         padding: .75rem .85rem;
         border-radius: 12px;
-        box-shadow: 0 8px 20px rgba(47,86,120,.10);
-        transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+        box-shadow: 0 8px 18px rgba(47,86,120,.10);
+        transition: transform .18s ease,box-shadow .18s ease,border-color .18s ease;
         overflow-wrap: anywhere;
         word-break: break-word;
         hyphens: auto;
@@ -258,8 +267,8 @@
 
         .card-item:hover {
             transform: translateY(-2px);
-            box-shadow: 0 14px 28px rgba(47,86,120,.16);
-            border-color: #cfe2ff;
+            box-shadow: 0 14px 26px rgba(47,86,120,.16);
+            border-color: #dbe4f4;
         }
 
     .card-head {
@@ -271,15 +280,15 @@
     .card-title {
         flex: 1;
         min-width: 0;
-        font-weight: 700;
-        color: #1f3b4f;
+        font-weight: 800;
+        color: var(--ink-1);
         overflow: hidden;
         white-space: nowrap;
         text-overflow: ellipsis;
     }
 
     .card-desc {
-        color: var(--text-2);
+        color: var(--ink-2);
         font-size: .97rem;
         margin-top: .35rem;
         white-space: pre-wrap;
@@ -290,7 +299,7 @@
         display: flex;
         gap: .6rem;
         font-size: .84rem;
-        color: #4f6f87;
+        color: #567596;
         margin-top: .4rem;
         flex-wrap: wrap;
     }
@@ -306,9 +315,9 @@
         padding: .18rem .52rem;
         border-radius: 999px;
         font-size: .78rem;
-        font-weight: 700;
+        font-weight: 800;
         color: #0b2a3a;
-        box-shadow: 0 0 0 1px var(--chip-border) inset, 0 6px 12px rgba(118,169,213,.15);
+        box-shadow: 0 6px 12px rgba(118,169,213,.15);
         max-width: 100%;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -363,18 +372,18 @@
     .modal-content {
         background: #fff !important;
         color: #1f3b4f;
-        border: 1px solid #dfeaff;
+        border: 1px solid #e7ecf5;
         box-shadow: 0 30px 60px rgba(118,169,213,.25);
     }
 
     .form-label {
         color: #21445a;
-        font-weight: 700;
+        font-weight: 800;
     }
 
     .form-control, .form-select {
         background: #fff;
-        border: 1px solid #cfe2ff;
+        border: 1px solid #d7e3f7;
         color: #1f3b4f;
     }
 
@@ -385,7 +394,7 @@
             box-shadow: 0 0 0 .2rem #bfe6ff66;
         }
 
-    /* ====== Color picker ====== */
+    /* ====== Color picker (look Twitter) ====== */
     .color-row {
         display: flex;
         align-items: center;
@@ -394,48 +403,70 @@
     }
 
     .chip-preview {
-        width: 36px;
-        height: 36px;
-        border-radius: 8px;
-        border: 1px solid #cfe2ff;
+        width: var(--swatch);
+        height: var(--swatch);
+        border-radius: 6px;
+        border: 1px solid #d7e3f7;
         background: #8ED1FC;
-        box-shadow: inset 0 0 0 2px #ffffffaa;
-    }
-
-    .color-popover {
-        position: absolute;
-        top: 48px;
-        left: 0;
-        z-index: 1056;
-        background: #fff;
-        border: 1px solid #e3eeff;
-        border-radius: 12px;
-        padding: .75rem;
-        box-shadow: 0 12px 30px rgba(65,105,165,.18);
-        width: 260px;
-    }
-
-    .swatch-grid {
-        display: grid;
-        grid-template-columns: repeat(5,1fr);
-        gap: .5rem;
-    }
-
-    .swatch {
-        width: 36px;
-        height: 36px;
-        border-radius: 8px;
-        border: 1px solid rgba(0,0,0,.08);
+        box-shadow: inset 0 0 0 1px #ffffffaa;
         cursor: pointer;
-        box-shadow: inset 0 0 0 2px #ffffffaa;
     }
 
-        .swatch:focus {
+        .chip-preview:focus-visible {
             outline: 2px solid #4ea4ff;
             outline-offset: 2px;
         }
 
+    .color-popover {
+        position: absolute;
+        top: 38px;
+        left: 0;
+        z-index: 1056;
+        width: var(--picker-w);
+        background: #fff;
+        border: 1px solid #e3eeff;
+        border-radius: 12px;
+        padding: 12px;
+        box-shadow: 0 12px 30px rgba(65,105,165,.18);
+    }
+
+        .color-popover::before {
+            content: "";
+            position: absolute;
+            top: -8px;
+            left: 16px;
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-bottom: 8px solid #fff;
+            filter: drop-shadow(0 -1px 0 #e3eeff);
+        }
+
+    .swatch-grid {
+        display: grid;
+        grid-template-columns: repeat(5,var(--swatch));
+        gap: var(--sw-gap);
+        justify-content: start;
+    }
+
+    .swatch {
+        width: var(--swatch);
+        height: var(--swatch);
+        border-radius: 6px;
+        border: 1px solid rgba(0,0,0,.08);
+        cursor: pointer;
+        padding: 0;
+        display: block;
+        box-shadow: none;
+    }
+
+        .swatch:hover {
+            filter: brightness(1.05);
+        }
+        /* selección sin deformar */
         .swatch.is-active {
+            outline: none;
             box-shadow: 0 0 0 2px #4ea4ff;
         }
 
@@ -451,7 +482,11 @@
             border-radius: 6px;
         }
 
-    /* ===== Chips con borrado + selección visible (modal Historia) ===== */
+            .palette-inline .swatch.is-active {
+                box-shadow: 0 0 0 2px #4ea4ff;
+            }
+
+    /* ===== Chips (modal Historia) ===== */
     #hist-etiquetas-chips .chip {
         --bg: #cfe9ff;
         display: inline-flex;
@@ -460,8 +495,8 @@
         background: var(--bg);
         border-radius: 999px;
         padding: .35rem .55rem;
-        box-shadow: 0 0 0 1px var(--chip-border) inset, 0 6px 12px rgba(118,169,213,.15);
-        font-weight: 700;
+        box-shadow: 0 6px 12px rgba(118,169,213,.15);
+        font-weight: 800;
         font-size: .85rem;
         cursor: pointer;
         position: relative;
@@ -471,7 +506,7 @@
 
         #hist-etiquetas-chips .chip.is-selected {
             border-color: #1e88e5;
-            box-shadow: 0 0 0 2px #bcdcff, 0 6px 12px rgba(118,169,213,.25);
+            box-shadow: 0 0 0 2px #bcdcff,0 6px 12px rgba(118,169,213,.25);
         }
 
             #hist-etiquetas-chips .chip.is-selected::after {
@@ -488,7 +523,7 @@
                 background: #fff;
                 color: #1e88e5;
                 font-weight: 900;
-                box-shadow: 0 0 0 1px #cfe2ff, 0 2px 6px rgba(0,0,0,.12);
+                box-shadow: 0 0 0 1px #cfe2ff,0 2px 6px rgba(0,0,0,.12);
             }
 
     .chip .del-tag {
@@ -529,8 +564,8 @@
         background: var(--bg);
         border-radius: 999px;
         padding: .35rem .55rem;
-        box-shadow: 0 0 0 1px var(--chip-border) inset, 0 6px 12px rgba(118,169,213,.15);
-        font-weight: 700;
+        box-shadow: 0 6px 12px rgba(118,169,213,.15);
+        font-weight: 800;
         font-size: .85rem;
     }
 
@@ -570,14 +605,14 @@
                 stroke: #d13b3b;
             }
 
-    /* ===== Scrollbars ===== */
+    /* Scrollbars */
     ::-webkit-scrollbar {
         height: 12px;
         width: 12px;
     }
 
     ::-webkit-scrollbar-thumb {
-        background: linear-gradient(180deg, #cfe9ff, #e7e2ff);
+        background: linear-gradient(180deg,#cfe9ff,#e7e2ff);
         border-radius: 999px;
         border: 2px solid transparent;
     }
@@ -587,7 +622,7 @@
         border-radius: 999px;
     }
 
-    /* ===== Windows 7 dialog styles ===== */
+    /* Windows 7 dialog */
     .win7-overlay {
         position: fixed;
         inset: 0;
@@ -613,7 +648,7 @@
         align-items: center;
         justify-content: space-between;
         padding: 0 6px 0 10px;
-        background: linear-gradient(#1f4e86, #2f6fb0);
+        background: linear-gradient(#1f4e86,#2f6fb0);
         color: #fff;
         text-shadow: 0 1px 0 rgba(0,0,0,.35);
         border-bottom: 1px solid #1b3f69;
@@ -701,7 +736,7 @@
             background: linear-gradient(#e6f1ff,#cfe4ff);
             border-color: #8aaee2;
             color: #083b7c;
-            box-shadow: inset 0 0 0 1px #fff, 0 0 0 1px rgba(138,174,226,.25);
+            box-shadow: inset 0 0 0 1px #fff,0 0 0 1px rgba(138,174,226,.25);
         }
 
         .win7-btn:focus {
@@ -724,18 +759,18 @@
             // DnD
             let draggingEl = null;
 
+            /* Paleta tipo Trello (colores sólidos y accesibles) */
             const PRESET_COLORS = [
-                '#FF6D00', '#FFA000', '#66BB6A', '#26A69A', '#8ED1FC',
-                '#42A5F5', '#1E88E5', '#B0BEC5', '#E53935', '#F06292',
-                '#8E24AA', '#7E57C2', '#5C6BC0', '#00ACC1', '#90A4AE',
-                '#9E9E9E', '#00C853', '#FFAB00', '#FF5252', '#3949AB'
+                '#61BD4F', '#F2D600', '#FF9F1A', '#EB5A46', '#C377E0', '#0079BF',
+                '#00C2E0', '#51E898', '#FF78CB', '#344563', '#B6BBBF', '#CD5A91',
+                '#4C9AFF', '#66E0FF', '#A5ADBA', '#FF8B00', '#36B37E', '#0065FF',
+                '#E01E5A', '#581DFF', '#00B8D9', '#6554C0', '#172B4D', '#97A0AF'
             ];
 
             /* ===== Windows 7 confirm dialog ===== */
             function showWin7Confirm({ title = '', heading = 'Confirmación requerida', message = '¿Deseas continuar?', primaryText = 'Aceptar', secondaryText = 'Cancelar' } = {}) {
                 return new Promise(resolve => {
                     const overlay = document.getElementById('win7Confirm');
-                    const win = overlay.querySelector('.win7-window');
                     const btnPrimary = overlay.querySelector('.js-primary');
                     const btnSecondary = overlay.querySelector('.js-secondary');
                     const btnClose = overlay.querySelector('.win7-close');
@@ -766,7 +801,6 @@
                     document.addEventListener('keydown', onKey);
 
                     overlay.hidden = false;
-                    // Focus al botón principal
                     setTimeout(() => btnPrimary.focus(), 0);
                 });
             }
@@ -809,7 +843,10 @@
                     container.innerHTML = '';
                     PRESET_COLORS.forEach(hex => {
                         const b = document.createElement('button');
-                        b.type = 'button'; b.className = 'swatch'; b.style.background = hex; b.dataset.hex = hex;
+                        b.type = 'button';
+                        b.className = 'swatch';
+                        b.style.background = hex;
+                        b.dataset.hex = hex;
                         b.addEventListener('click', () => { setColor(hex); hidePopover(); });
                         container.appendChild(b);
                     });
@@ -896,24 +933,24 @@
                 const svgTrash = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg>`;
 
                 li.innerHTML = `
-                  <div class="card-head">
-                    <div class="card-title" title="${h.titulo ?? ''}">${h.titulo ?? ''}</div>
-                    <div class="card-actions">
-                      <button type="button" class="btn-edit" title="Editar" aria-label="Editar">${svgEdit}</button>
-                      <button type="button" class="btn-del"  title="Eliminar" aria-label="Eliminar">${svgTrash}</button>
-                    </div>
-                  </div>
-                  ${desc ? `<div class="card-desc">${desc}</div>` : ''}
-                  ${vence ? `<div class="card-meta"><span>🗓 ${vence}</span></div>` : ''}
-                  ${tags.length ? `
-                    <div class="tags">
-                      ${tags.map(e => {
+                          <div class="card-head">
+                            <div class="card-title" title="${h.titulo ?? ''}">${h.titulo ?? ''}</div>
+                            <div class="card-actions">
+                              <button type="button" class="btn-edit" title="Editar" aria-label="Editar">${svgEdit}</button>
+                              <button type="button" class="btn-del"  title="Eliminar" aria-label="Eliminar">${svgTrash}</button>
+                            </div>
+                          </div>
+                          ${desc ? `<div class="card-desc">${desc}</div>` : ''}
+                          ${vence ? `<div class="card-meta"><span>🗓 ${vence}</span></div>` : ''}
+                          ${tags.length ? `
+                            <div class="tags">
+                              ${tags.map(e => {
                     const col = e.color ?? '#9cc4dd';
                     const tc = contrastText(col);
                     const idAttr = typeof e.etiquetaId === 'number' ? ` data-etiqueta-id="${e.etiquetaId}"` : '';
                     return `<span class="tag"${idAttr} style="background:${col};color:${tc}">${e.nombre ?? ''}</span>`;
                 }).join('')}
-                    </div>`: ''}`;
+                            </div>`: ''}`;
 
                 li.addEventListener('dragstart', e => {
                     draggingEl = li; li.classList.add('dragging');
@@ -1092,7 +1129,7 @@
                     chip.style.setProperty('--bg', bg);
                     chip.style.color = contrastText(bg);
                     chip.innerHTML = `<span class="txt">${e.nombre}</span>
-                                      <button type="button" class="del-tag" title="Eliminar etiqueta" aria-label="Eliminar etiqueta">${svgTrashMini}</button>`;
+                                              <button type="button" class="del-tag" title="Eliminar etiqueta" aria-label="Eliminar etiqueta">${svgTrashMini}</button>`;
                     if (selectedIds.includes(e.etiquetaId)) chip.classList.add('is-selected');
 
                     chip.addEventListener('click', (ev) => {
@@ -1133,9 +1170,9 @@
                         const fg = contrastText(bg);
                         const name = (e.nombre ?? '').replace(/"/g, '&quot;');
                         return `<span class="tag-chip" data-id="${e.etiquetaId}" style="--bg:${bg};color:${fg}">
-                                  <span class="n">${name}</span>
-                                  <button type="button" class="del-tag" title="Eliminar etiqueta" aria-label="Eliminar etiqueta">${svgTrashMini}</button>
-                                </span>`;
+                                          <span class="n">${name}</span>
+                                          <button type="button" class="del-tag" title="Eliminar etiqueta" aria-label="Eliminar etiqueta">${svgTrashMini}</button>
+                                        </span>`;
                     }).join('');
                 } catch (e) {
                     console.error(e);
@@ -1143,7 +1180,6 @@
                 }
             }
 
-            // Quita la etiqueta eliminada de todo el UI (tarjetas + estado local)
             function removeEtiquetaFromUI(tagId) {
                 document.querySelectorAll(`.tag[data-etiqueta-id="${tagId}"]`).forEach(el => {
                     const parent = el.parentElement;
@@ -1155,7 +1191,6 @@
                 });
             }
 
-            // Click papelera en chips/lista
             async function onAnyDeleteClick(e) {
                 const btn = e.target.closest('button.del-tag');
                 if (!btn) return;
