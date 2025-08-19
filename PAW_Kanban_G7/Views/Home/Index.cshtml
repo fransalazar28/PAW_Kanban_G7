@@ -1,8 +1,354 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+﻿@model int
+@{
+    ViewData["Title"] = "Board";
+    // 👉 pon aquí el puerto real de tu API (deja 7291 si coincide)
+    var apiBase = "https://localhost:7291";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<h1 class="mb-3">Board (@Model)</h1>
+
+<button id="btn-add" class="btn btn-primary mb-3" disabled>+ Nueva historia</button>
+<div id="board" class="board"></div>
+
+<!-- Modal: Crear / Editar historia -->
+<div class="modal fade" id="modalHistoria" tabindex="-1" aria-labelledby="modalHistoriaLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <form id="frmHistoria" class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalHistoriaLabel">Nueva historia</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="historiaId" />
+                <input type="hidden" id="columnaId" />
+                <div class="mb-3">
+                    <label for="titulo" class="form-label">Título</label>
+                    <input id="titulo" class="form-control" maxlength="150" required />
+                </div>
+                <div class="mb-3">
+                    <label for="descripcion" class="form-label">Descripción</label>
+                    <textarea id="descripcion" class="form-control" rows="3"></textarea>
+                </div>
+                <div class="row g-3">
+                    <div class="col-sm-6">
+                        <label for="responsableId" class="form-label">Responsable (opcional)</label>
+                        <input id="responsableId" class="form-control" type="number" min="1" />
+                    </div>
+                    <div class="col-sm-6">
+                        <label for="fechaVenc" class="form-label">Vence (opcional)</label>
+                        <input id="fechaVenc" class="form-control" type="date" />
+                    </div>
+                </div>
+                <div class="form-text mt-2" id="msgForm"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button id="btnSubmit" type="submit" class="btn btn-primary">Guardar</button>
+            </div>
+        </form>
+    </div>
 </div>
+
+<style>
+    .board {
+        display: grid;
+        grid-template-columns: repeat(4,minmax(260px,1fr));
+        gap: 1rem;
+    }
+
+    .column {
+        background: #f4f5f7;
+        border-radius: 12px;
+        padding: .75rem
+    }
+
+        .column h3 {
+            margin: .25rem 0 .75rem
+        }
+
+        .column ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            min-height: 240px
+        }
+
+    .card-item {
+        position: relative;
+        background: #fff;
+        margin: .5rem 0;
+        padding: .65rem .75rem;
+        border-radius: 8px;
+        box-shadow: 0 1px 2px rgba(0,0,0,.08);
+        cursor: grab;
+    }
+
+    .card-title {
+        font-weight: 600;
+        margin-right: 1.5rem
+    }
+
+    .card-desc {
+        color: #50607a;
+        font-size: .95rem;
+        margin-top: .25rem;
+        white-space: pre-wrap
+    }
+
+    .card-meta {
+        display: flex;
+        gap: .5rem;
+        font-size: .83rem;
+        color: #6b7b93;
+        margin-top: .35rem;
+        flex-wrap: wrap
+    }
+
+    .tags {
+        display: flex;
+        gap: .35rem;
+        flex-wrap: wrap;
+        margin-top: .4rem
+    }
+
+    .tag {
+        padding: .12rem .4rem;
+        border-radius: 6px;
+        font-size: .76rem;
+        color: #fff
+    }
+
+    .card-actions {
+        position: absolute;
+        top: .35rem;
+        right: .4rem;
+        display: flex;
+        gap: .35rem;
+    }
+
+        .card-actions button {
+            border: none;
+            background: transparent;
+            line-height: 1;
+            padding: .1rem .2rem;
+            cursor: pointer
+        }
+</style>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+    <script>
+        (() => {
+            const API_BASE = "@apiBase";
+            const tableroId = @Model;
+
+            let columnasPorNombre = {};
+            let historiasById = {};
+            let modal, submitBtn, frm;
+
+            document.addEventListener('DOMContentLoaded', async () => {
+                modal = new bootstrap.Modal(document.getElementById('modalHistoria'));
+                submitBtn = document.getElementById('btnSubmit');
+                frm = document.getElementById('frmHistoria');
+
+                document.getElementById('btn-add').addEventListener('click', onAdd);
+                frm.addEventListener('submit', onSubmitForm);
+
+                await loadBoard();
+            });
+
+            async function loadBoard() {
+                const container = document.getElementById('board');
+                container.innerHTML = '';
+                historiasById = {};
+                columnasPorNombre = {};
+                try {
+                    const res = await fetch(`${API_BASE}/api/historias/board/${tableroId}`);
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    const data = await res.json();
+
+                    (data.columnas || []).forEach(c => columnasPorNombre[(c.nombre || '').toLowerCase()] = c.columnaId);
+
+                    for (const col of (data.columnas || [])) {
+                        const colDiv = document.createElement('div');
+                        colDiv.className = 'column';
+                        const h3 = document.createElement('h3'); h3.textContent = col.nombre;
+                        const ul = document.createElement('ul'); ul.dataset.columnaId = col.columnaId;
+
+                        for (const h of (col.historias || [])) {
+                            historiasById[h.historiaId] = h;
+                            ul.appendChild(renderCard(h));
+                        }
+
+                        colDiv.appendChild(h3);
+                        colDiv.appendChild(ul);
+                        container.appendChild(colDiv);
+                    }
+
+                    document.querySelectorAll('[data-columna-id]').forEach(list => {
+                        new Sortable(list, {
+                            group: 'board', animation: 150,
+                            onEnd: async (e) => {
+                                const historiaId = +e.item.dataset.id;
+                                const newColId = +e.to.dataset.columnaId;
+                                const newIndex = e.newIndex;
+                                const r = await fetch(`${API_BASE}/api/historias/${historiaId}/status`, {
+                                    method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ columnaId: newColId, newIndex })
+                                });
+                                if (!r.ok && r.status !== 204) alert('No se pudo mover la tarjeta');
+                                await loadBoard();
+                            }
+                        });
+                    });
+
+                    document.getElementById('btn-add').disabled = false;
+                } catch (err) {
+                    console.error(err);
+                    container.innerHTML = `<p class="text-danger">Error: no se pudo cargar el tablero.</p>`;
+                }
+            }
+
+            function fmtDate(iso) {
+                if (!iso) return "";
+                const d = new Date(iso);
+                return isNaN(d) ? "" : d.toLocaleDateString();
+            }
+
+            function renderCard(h) {
+                const li = document.createElement('li');
+                li.className = 'card-item';
+                li.dataset.id = h.historiaId;
+
+                const desc = h.descripcion?.trim();
+                const resp = (h.responsableNombre ?? null) || (h.responsableId != null ? `#${h.responsableId}` : null);
+                const vence = fmtDate(h.fechaVencimiento);
+                const tags = Array.isArray(h.etiquetas) ? h.etiquetas : [];
+                const comments = (typeof h.comentarios === 'number') ? h.comentarios : null;
+
+                li.innerHTML = `
+                            <div class="card-title">${h.titulo ?? ''}</div>
+                            ${desc ? `<div class="card-desc">${desc}</div>` : ``}
+                            ${(resp || vence || comments != null) ? `
+                              <div class="card-meta">
+                                ${resp ? `<span>👤 ${resp}</span>` : ``}
+                                ${vence ? `<span>🗓 ${vence}</span>` : ``}
+                                ${comments != null ? `<span>💬 ${comments}</span>` : ``}
+                              </div>` : ``}
+                            ${tags.length ? `
+                              <div class="tags">
+                                ${tags.map(e => `<span class="tag" style="background:${e.color ?? '#64748b'}">${e.nombre ?? ''}</span>`).join('')}
+                              </div>` : ``}
+                            <div class="card-actions">
+                              <button title="Editar" class="btn-edit" aria-label="Editar">✏️</button>
+                              <button title="Eliminar" class="btn-del" aria-label="Eliminar">🗑️</button>
+                            </div>
+                        `;
+
+                li.querySelector('.btn-edit')?.addEventListener('click', (ev) => { ev.stopPropagation(); onEdit(h.historiaId); });
+                li.querySelector('.btn-del')?.addEventListener('click', (ev) => { ev.stopPropagation(); onDelete(h.historiaId); });
+                li.addEventListener('dblclick', () => onEdit(h.historiaId));
+
+                return li;
+            }
+
+            async function onAdd() {
+                const backlogId = columnasPorNombre['backlog']
+                    ?? (+document.querySelector('[data-columna-id]')?.dataset.columnaId || null);
+                if (!backlogId) { alert('No encuentro la columna Backlog'); return; }
+
+                openModal({
+                    mode: 'create',
+                    data: { historiaId: '', titulo: '', descripcion: '', responsableId: '', fechaVenc: '' },
+                    columnaId: backlogId
+                });
+            }
+
+            function onEdit(id) {
+                const h = historiasById[id];
+                if (!h) { alert('No encuentro la historia'); return; }
+                openModal({
+                    mode: 'edit',
+                    data: {
+                        historiaId: h.historiaId,
+                        titulo: h.titulo ?? '',
+                        descripcion: h.descripcion ?? '',
+                        responsableId: h.responsableId ?? '',
+                        fechaVenc: h.fechaVencimiento ? new Date(h.fechaVencimiento).toISOString().slice(0, 10) : ''
+                    },
+                    columnaId: +document.querySelector(`.card-item[data-id="${id}"]`)?.closest('[data-columna-id]')?.dataset.columnaId || ''
+                });
+            }
+
+            async function onDelete(id) {
+                if (!confirm('¿Eliminar esta historia?')) return;
+                const r = await fetch(`${API_BASE}/api/historias/${id}`, { method: 'DELETE' });
+                if (!r.ok && r.status !== 204) { alert('No se pudo eliminar'); return; }
+                await loadBoard();
+            }
+
+            function openModal({ mode, data, columnaId }) {
+                document.getElementById('modalHistoriaLabel').textContent =
+                    mode === 'create' ? 'Nueva historia' : 'Editar historia';
+
+                document.getElementById('historiaId').value = data.historiaId || '';
+                document.getElementById('columnaId').value = columnaId || '';
+                document.getElementById('titulo').value = data.titulo || '';
+                document.getElementById('descripcion').value = data.descripcion || '';
+                document.getElementById('responsableId').value = data.responsableId || '';
+                document.getElementById('fechaVenc').value = data.fechaVenc || '';
+
+                document.getElementById('msgForm').textContent = '';
+                submitBtn.dataset.mode = mode;
+                modal.show();
+            }
+
+            async function onSubmitForm(ev) {
+                ev.preventDefault();
+                submitBtn.disabled = true;
+
+                const mode = submitBtn.dataset.mode;
+                const historiaId = document.getElementById('historiaId').value.trim();
+                const columnaId = +document.getElementById('columnaId').value || null;
+                const titulo = document.getElementById('titulo').value.trim();
+                const descripcion = document.getElementById('descripcion').value.trim();
+                const respStr = document.getElementById('responsableId').value.trim();
+                const fechaStr = document.getElementById('fechaVenc').value;
+
+                const responsableId = respStr ? +respStr : null;
+                const fechaVenc = fechaStr ? new Date(fechaStr + 'T00:00:00').toISOString() : null;
+
+                try {
+                    let r;
+                    if (mode === 'create') {
+                        const body = { titulo, descripcion: descripcion || null, columnaId, responsableId };
+                        r = await fetch(`${API_BASE}/api/historias`, {
+                            method: 'POST', headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(body)
+                        });
+                    } else {
+                        const body = {
+                            titulo: titulo || null,
+                            descripcion: descripcion || null,
+                            responsableId,
+                            fechaVencimiento: fechaVenc
+                        };
+                        r = await fetch(`${API_BASE}/api/historias/${historiaId}`, {
+                            method: 'PUT', headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(body)
+                        });
+                    }
+                    if (!r.ok && r.status !== 204) throw new Error('HTTP ' + r.status);
+
+                    modal.hide();
+                    await loadBoard();
+                } catch (err) {
+                    console.error(err);
+                    document.getElementById('msgForm').textContent = 'Ocurrió un error. Revisa la consola.';
+                } finally {
+                    submitBtn.disabled = false;
+                }
+            }
+        })();
+    </script>
+}

@@ -12,15 +12,15 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace K.Data.Migrations
 {
     [DbContext(typeof(KanbanDbContext))]
-    [Migration("20250816032613_InitKanban")]
-    partial class InitKanban
+    [Migration("20250818020704_InitKanban_Restrict2")]
+    partial class InitKanban_Restrict2
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.6")
+                .HasAnnotation("ProductVersion", "9.0.8")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -112,7 +112,13 @@ namespace K.Data.Migrations
                         .HasColumnType("nvarchar(50)")
                         .HasAnnotation("Relational:JsonPropertyName", "nombre");
 
+                    b.Property<int>("TableroId")
+                        .HasColumnType("int");
+
                     b.HasKey("EtiquetaId");
+
+                    b.HasIndex("TableroId", "Nombre")
+                        .IsUnique();
 
                     b.ToTable("Etiquetas", (string)null);
                 });
@@ -184,7 +190,7 @@ namespace K.Data.Migrations
 
                     b.HasIndex("EtiquetaId");
 
-                    b.ToTable("HistoriaEtiqueta", (string)null);
+                    b.ToTable("HistoriasEtiquetas", (string)null);
                 });
 
             modelBuilder.Entity("K.Models.Tablero", b =>
@@ -292,6 +298,17 @@ namespace K.Data.Migrations
                     b.Navigation("Usuario");
                 });
 
+            modelBuilder.Entity("K.Models.Etiqueta", b =>
+                {
+                    b.HasOne("K.Models.Tablero", "Tablero")
+                        .WithMany("Etiquetas")
+                        .HasForeignKey("TableroId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Tablero");
+                });
+
             modelBuilder.Entity("K.Models.Historia", b =>
                 {
                     b.HasOne("K.Models.Columna", "Columna")
@@ -360,6 +377,8 @@ namespace K.Data.Migrations
             modelBuilder.Entity("K.Models.Tablero", b =>
                 {
                     b.Navigation("Columnas");
+
+                    b.Navigation("Etiquetas");
                 });
 
             modelBuilder.Entity("K.Models.Usuario", b =>

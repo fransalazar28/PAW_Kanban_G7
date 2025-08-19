@@ -4,8 +4,7 @@ namespace PAW_Kanban_G7.Controllers
 {
     public class BoardController : Controller
     {
-
-        [HttpGet]
-        public IActionResult Index(int id = 1) => View(model: id);
+        public IActionResult Index(int id = 3) => View(model: id);
     }
+
 }

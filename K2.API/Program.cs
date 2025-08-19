@@ -1,39 +1,34 @@
-using System.Text.Json;
-using System.Text.Json.Serialization;
+// K2.API/Program.cs  (API)
+using Microsoft.EntityFrameworkCore;
 using K.Data.MSSql;
-using K.Business;
 using K.Repositories;
+using K.Business;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// DbContext
+builder.Services.AddDbContext<KanbanDbContext>(opt =>
+    opt.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-builder.Services.AddControllers()
-    .AddJsonOptions(o =>
-    {
-        o.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
-        o.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
-    });
-
+// MVC + Swagger
+builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// CORS (DEV)
+builder.Services.AddCors(opt =>
+{
+    opt.AddPolicy("ui", p => p
+        .AllowAnyOrigin()
+        .AllowAnyHeader()
+        .AllowAnyMethod());
+});
 
-builder.Services.AddCors(o => o.AddPolicy("mvc", p =>
-    p.WithOrigins(
-        "https://localhost:7154",  
-        "http://localhost:5132"    
-    )
-    .AllowAnyHeader()
-    .AllowAnyMethod()
-
-));
-
-
-builder.Services.AddDbContext<KanbanDbContext>();
-
-
+// DI
 builder.Services.AddScoped<IHistoriaRepository, HistoriaRepository>();
 builder.Services.AddScoped<IHistoriaService, HistoriaService>();
+builder.Services.AddScoped<IEtiquetaRepository, EtiquetaRepository>();
+builder.Services.AddScoped<IEtiquetaService, EtiquetaService>();
 
 var app = builder.Build();
 
@@ -44,16 +39,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
-
-app.UseCors("mvc");
-
-
-app.UseAuthorization();
-
+app.UseCors("ui");
 app.MapControllers();
-
-
-app.MapGet("/ping", () => Results.Ok("pong"));
 
 app.Run();

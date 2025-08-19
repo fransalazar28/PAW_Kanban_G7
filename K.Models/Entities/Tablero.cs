@@ -26,5 +26,8 @@ namespace K.Models
 
         [JsonIgnore]
         public virtual ICollection<Columna> Columnas { get; set; } = new List<Columna>();
+
+        [JsonIgnore]
+        public virtual ICollection<Etiqueta> Etiquetas { get; set; } = new List<Etiqueta>();
     }
 }

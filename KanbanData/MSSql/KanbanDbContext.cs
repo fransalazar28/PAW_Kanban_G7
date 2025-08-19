@@ -24,7 +24,7 @@ namespace K.Data.MSSql
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-
+            // ============= USUARIOS =================
             modelBuilder.Entity<Usuario>(entity =>
             {
                 entity.ToTable("Usuarios");
@@ -35,8 +35,7 @@ namespace K.Data.MSSql
                 entity.Property(e => e.FechaCreacion).HasDefaultValueSql("GETDATE()");
             });
 
-
- 
+            // ============= TABLEROS =================
             modelBuilder.Entity<Tablero>(entity =>
             {
                 entity.ToTable("Tableros");
@@ -47,25 +46,23 @@ namespace K.Data.MSSql
                 entity.HasOne(e => e.Usuario)
                       .WithMany(u => u.Tableros)
                       .HasForeignKey(e => e.UsuarioId)
-                      .OnDelete(DeleteBehavior.Restrict); 
+                      .OnDelete(DeleteBehavior.Restrict);
             });
 
-
-
-            // Columnas
+            // ============= COLUMNAS =================
             modelBuilder.Entity<Columna>(entity =>
             {
                 entity.ToTable("Columnas");
                 entity.HasKey(e => e.ColumnaId);
                 entity.Property(e => e.Nombre).IsRequired().HasMaxLength(50);
                 entity.Property(e => e.Orden).IsRequired();
-
                 entity.HasOne(e => e.Tablero)
                       .WithMany(t => t.Columnas)
-                      .HasForeignKey(e => e.TableroId);
+                      .HasForeignKey(e => e.TableroId)
+                      .OnDelete(DeleteBehavior.Cascade);
             });
 
-            // Historias (tabla: HistoriasUsuario)
+            // ============= HISTORIAS (HistoriasUsuario) =================
             modelBuilder.Entity<Historia>(entity =>
             {
                 entity.ToTable("HistoriasUsuario");
@@ -76,23 +73,23 @@ namespace K.Data.MSSql
                 entity.Property(e => e.FechaCreacion).HasDefaultValueSql("GETDATE()");
                 entity.Property(e => e.Orden).HasDefaultValue(int.MaxValue);
 
-                // Columna (1) ──(N) Historias  → borrar columna borra historias
+                // Columna (1)─(N) Historias
                 entity.HasOne(e => e.Columna)
                       .WithMany(c => c.Historias)
                       .HasForeignKey(e => e.ColumnaId)
                       .OnDelete(DeleteBehavior.Cascade);
 
-                // Usuario (1) ──(N) Historias (Responsable opcional) → al borrar usuario, pone NULL
+                // Responsable opcional
                 entity.HasOne(e => e.Responsable)
                       .WithMany(u => u.HistoriasAsignadas)
                       .HasForeignKey(e => e.ResponsableId)
                       .OnDelete(DeleteBehavior.SetNull);
 
-                // Índice para ordenar dentro de la columna
+                // Orden por columna
                 entity.HasIndex(e => new { e.ColumnaId, e.Orden });
             });
 
-            // Comentarios
+            // ============= COMENTARIOS =================
             modelBuilder.Entity<Comentario>(entity =>
             {
                 entity.ToTable("Comentarios");
@@ -100,41 +97,51 @@ namespace K.Data.MSSql
                 entity.Property(e => e.Texto).IsRequired();
                 entity.Property(e => e.FechaRegistro).HasDefaultValueSql("GETDATE()");
 
-                // Historia (1) ──(N) Comentarios → borrar historia borra sus comentarios
                 entity.HasOne(e => e.Historia)
                       .WithMany(h => h.Comentarios)
                       .HasForeignKey(e => e.HistoriaId)
                       .OnDelete(DeleteBehavior.Cascade);
 
-                // Usuario (1) ──(N) Comentarios → borrar usuario borra sus comentarios
                 entity.HasOne(e => e.Usuario)
                       .WithMany(u => u.Comentarios)
                       .HasForeignKey(e => e.UsuarioId)
                       .OnDelete(DeleteBehavior.Cascade);
             });
 
+            // Etiquetas
             modelBuilder.Entity<Etiqueta>(entity =>
             {
                 entity.ToTable("Etiquetas");
                 entity.HasKey(e => e.EtiquetaId);
                 entity.Property(e => e.Nombre).IsRequired().HasMaxLength(50);
                 entity.Property(e => e.Color).HasMaxLength(20);
+
+                // Usa la propiedad real TableroId y RESTRICT
+                entity.HasOne(e => e.Tablero)
+                      .WithMany(t => t.Etiquetas)
+                      .HasForeignKey(e => e.TableroId)
+                      .OnDelete(DeleteBehavior.Restrict); // << clave del fix
+
+                entity.HasIndex(e => new { e.TableroId, e.Nombre }).IsUnique();
             });
 
-
+            // Join HistoriasEtiquetas
             modelBuilder.Entity<HistoriaEtiqueta>(entity =>
             {
-                entity.ToTable("HistoriaEtiqueta");
+                entity.ToTable("HistoriasEtiquetas");
                 entity.HasKey(e => new { e.HistoriaId, e.EtiquetaId });
 
                 entity.HasOne(e => e.Historia)
                       .WithMany(h => h.HistoriasEtiquetas)
-                      .HasForeignKey(e => e.HistoriaId);
+                      .HasForeignKey(e => e.HistoriaId)
+                      .OnDelete(DeleteBehavior.Cascade);
 
                 entity.HasOne(e => e.Etiqueta)
-                      .WithMany(l => l.HistoriasEtiquetas)
-                      .HasForeignKey(e => e.EtiquetaId);
+                      .WithMany(e => e.HistoriasEtiquetas)
+                      .HasForeignKey(e => e.EtiquetaId)
+                      .OnDelete(DeleteBehavior.Cascade);
             });
+
 
             OnModelCreatingPartial(modelBuilder);
         }

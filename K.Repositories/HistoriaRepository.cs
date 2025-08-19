@@ -124,6 +124,8 @@ namespace K.Repositories
             await _db.SaveChangesAsync(ct);
         }
 
+
+
         public async Task UpdateAsync(int id, UpdateHistoriaDto dto, CancellationToken ct = default)
         {
             var h = await _db.Historias.FindAsync(new object?[] { id }, ct);

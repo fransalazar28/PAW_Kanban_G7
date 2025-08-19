@@ -1,16 +1,19 @@
 ﻿@model int
 @{
     ViewData["Title"] = "Board";
-    // 👇 Ajusta SI es necesario
-    var apiBase = "https://localhost:7291";
+    var apiBase = "https://localhost:7291"; // ajusta si tu API usa otro puerto
 }
 
-<h1 class="mb-3">Board (@Model)</h1>
+<h1 class="mb-3">Board</h1>
 
-<button id="btn-add" class="btn btn-primary mb-3" disabled>+ Nueva historia</button>
+<div class="d-flex gap-2 mb-3">
+    <button id="btn-add" class="btn btn-primary" disabled>+ Nueva historia</button>
+    <button id="btn-tags" class="btn btn-outline-secondary">Etiquetas</button>
+</div>
+
 <div id="board" class="board"></div>
 
-<!-- Modal: Crear / Editar historia -->
+<!-- Modal Historia -->
 <div class="modal fade" id="modalHistoria" tabindex="-1" aria-labelledby="modalHistoriaLabel" aria-hidden="true">
     <div class="modal-dialog">
         <form id="frmHistoria" class="modal-content">
@@ -21,149 +24,842 @@
             <div class="modal-body">
                 <input type="hidden" id="historiaId" />
                 <input type="hidden" id="columnaId" />
+
                 <div class="mb-3">
                     <label for="titulo" class="form-label">Título</label>
                     <input id="titulo" class="form-control" maxlength="150" required />
                 </div>
+
                 <div class="mb-3">
                     <label for="descripcion" class="form-label">Descripción</label>
                     <textarea id="descripcion" class="form-control" rows="3"></textarea>
                 </div>
-                <div class="row g-3">
-                    <div class="col-sm-6">
-                        <label for="responsableId" class="form-label">Responsable (opcional)</label>
-                        <input id="responsableId" class="form-control" type="number" min="1" />
-                    </div>
-                    <div class="col-sm-6">
-                        <label for="fechaVenc" class="form-label">Vence (opcional)</label>
-                        <input id="fechaVenc" class="form-control" type="date" />
-                    </div>
+
+                <div class="mb-3">
+                    <label for="fechaVenc" class="form-label">Vence (opcional)</label>
+                    <input id="fechaVenc" class="form-control" type="date" />
                 </div>
-                <div class="form-text mt-2" id="msgForm"></div>
+
+                <!-- Etiquetas de la historia -->
+                <div class="mt-3">
+                    <label class="form-label">Etiquetas</label>
+                    <div id="hist-etiquetas-chips" class="d-flex flex-wrap gap-2"></div>
+                    <small class="text-muted">Haz clic para seleccionar varias</small>
+                </div>
+
+                <div class="form-text mt-2 text-danger" id="msgForm"></div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button id="btnSubmit" type="submit" class="btn btn-primary">
-                    Guardar
-                </button>
+                <button id="btnSubmit" type="submit" class="btn btn-primary">Guardar</button>
             </div>
         </form>
     </div>
 </div>
 
+<!-- Modal Etiquetas -->
+<div class="modal fade" id="modalEtiqueta" tabindex="-1" aria-labelledby="modalEtiquetaLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <form id="frmEtiqueta" class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalEtiquetaLabel">Etiquetas del tablero</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-2">
+                    <div class="small text-muted mb-1">Existentes</div>
+                    <div id="listaEtiquetas" class="d-flex flex-wrap gap-2"></div>
+                </div>
+                <hr class="my-3" />
+                <div class="mb-3">
+                    <label for="etqNombre" class="form-label">Nueva etiqueta</label>
+                    <input id="etqNombre" class="form-control" maxlength="50" placeholder="Nombre (p. ej., Bug, Alta, UI)" required />
+                </div>
+
+                <!-- Selector de color -->
+                <div class="mb-2">
+                    <label class="form-label">Color</label>
+
+                    <div class="color-row">
+                        <div id="colorChip" class="chip-preview" role="button" aria-label="Elegir color" tabindex="0"></div>
+                        <div class="input-group" style="max-width: 180px;">
+                            <span class="input-group-text">#</span>
+                            <input id="etqColor" class="form-control" value="8ED1FC" />
+                        </div>
+
+                        <!-- Popover con paleta -->
+                        <div id="colorPopover" class="color-popover" hidden>
+                            <div id="swatchGrid" class="swatch-grid"></div>
+                            <div class="swatch-footer">
+                                <small class="text-muted">Click para elegir • Esc para cerrar</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Paleta rápida -->
+                    <div class="mt-2">
+                        <div class="small text-muted mb-1">Paleta rápida</div>
+                        <div id="colorPalette" class="palette-inline"></div>
+                    </div>
+                </div>
+
+                <div id="msgTags" class="form-text text-danger"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button id="btnCreateTag" type="submit" class="btn btn-primary">Crear etiqueta</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ===== Popup estilo Windows 7 (confirmación) ===== -->
+<div id="win7Confirm" class="win7-overlay" hidden>
+    <div class="win7-window" role="dialog" aria-modal="true" aria-labelledby="win7Title">
+        <div class="win7-titlebar">
+            <div class="win7-title" id="win7Title">Windows</div>
+            <button type="button" class="win7-close" aria-label="Cerrar">×</button>
+        </div>
+        <div class="win7-body">
+            <div class="win7-icon" aria-hidden="true">
+                <!-- Icono tipo advertencia -->
+                <svg viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M12 7v7M12 17v0"></path>
+                </svg>
+            </div>
+            <div class="win7-text">
+                <div class="win7-heading" id="win7Heading">Confirmación requerida</div>
+                <div class="win7-message" id="win7Msg">¿Deseas continuar?</div>
+            </div>
+        </div>
+        <div class="win7-buttons">
+            <button type="button" class="win7-btn js-secondary">Cancelar</button>
+            <button type="button" class="win7-btn primary js-primary" autofocus>Eliminar</button>
+        </div>
+    </div>
+</div>
+
 <style>
+    /* Oculta header/base del layout */
+    body > header, .navbar, .top-row, .navbar-brand, .navbar-nav {
+        display: none !important;
+    }
+
+    .container, main {
+        margin-top: 0 !important;
+    }
+
+    /* ======= Tema ======= */
+    :root {
+        --bg-01: #f7fbff;
+        --bg-02: #eef7ff;
+        --glow-1: #9BE8FF;
+        --glow-2: #E6E1FF;
+        --text-1: #244056;
+        --text-2: #587a95;
+        --chip-border: #8dc9ff55;
+        --card-bg: #ffffffee;
+        --card-border: #dfeaff;
+        --col-bg: #ffffffcc;
+        --col-border: #d9e9ff;
+    }
+
+    body {
+        background: radial-gradient(1200px 800px at 10% -10%, #c8ebff66 0%, transparent 60%), radial-gradient(900px 650px at 100% 0%, #e8e1ff66 0%, transparent 55%), linear-gradient(160deg, var(--bg-01), var(--bg-02)) fixed;
+        color: var(--text-1);
+        font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+    }
+
+    h1 {
+        font-weight: 800;
+        letter-spacing: .3px;
+        margin-top: .5rem;
+        background: linear-gradient(90deg, var(--glow-1), var(--glow-2));
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        text-shadow: 0 0 12px #9be8ff30;
+    }
+
+    .btn-primary {
+        border: 0;
+        background: linear-gradient(90deg,var(--glow-1),var(--glow-2));
+        color: #07324b;
+        font-weight: 700;
+        box-shadow: 0 8px 18px #9bd6ff33, inset 0 0 0 1px #fff;
+    }
+
+    .btn-outline-secondary {
+        border-color: #a9cfff;
+        color: #21506b;
+        background: #fff;
+    }
+
+    .btn-primary:hover {
+        filter: brightness(1.05) saturate(1.03);
+    }
+
+    .btn-outline-secondary:hover {
+        background: #f4faff;
+    }
+
     .board {
         display: grid;
         grid-template-columns: repeat(4,minmax(260px,1fr));
-        gap: 1rem;
+        gap: 1.2rem;
     }
 
     .column {
-        background: #f4f5f7;
-        border-radius: 12px;
-        padding: .75rem
+        background: var(--col-bg);
+        border: 1px solid var(--col-border);
+        border-radius: 16px;
+        padding: .9rem;
+        box-shadow: 0 10px 26px rgba(44,95,150,.08);
     }
 
         .column h3 {
-            margin: .25rem 0 .75rem
+            margin: .15rem 0 1rem;
+            color: #1d3a4f;
+            font-weight: 800;
+            letter-spacing: .2px;
+            display: flex;
+            align-items: center;
+            gap: .5rem;
         }
+
+            .column h3::after {
+                content: "";
+                height: 3px;
+                flex: 1;
+                border-radius: 999px;
+                background: linear-gradient(90deg, #dfeeff, #ffffff00);
+            }
 
         .column ul {
             list-style: none;
             margin: 0;
             padding: 0;
-            min-height: 240px
+            min-height: 260px;
         }
 
     .card-item {
-        position: relative;
-        background: #fff;
-        margin: .5rem 0;
-        padding: .65rem .75rem;
-        border-radius: 8px;
-        box-shadow: 0 1px 2px rgba(0,0,0,.08);
-        cursor: grab;
+        background: var(--card-bg);
+        border: 1px solid var(--card-border);
+        margin: .6rem 0;
+        padding: .75rem .85rem;
+        border-radius: 12px;
+        box-shadow: 0 8px 20px rgba(47,86,120,.10);
+        transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+        hyphens: auto;
+    }
+
+        .card-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 14px 28px rgba(47,86,120,.16);
+            border-color: #cfe2ff;
+        }
+
+    .card-head {
+        display: flex;
+        align-items: center;
+        gap: .5rem;
     }
 
     .card-title {
-        font-weight: 600;
-        margin-right: 1.5rem
+        flex: 1;
+        min-width: 0;
+        font-weight: 700;
+        color: #1f3b4f;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
     }
 
     .card-desc {
-        color: #50607a;
-        font-size: .95rem;
-        margin-top: .25rem;
-        white-space: pre-wrap
+        color: var(--text-2);
+        font-size: .97rem;
+        margin-top: .35rem;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
     }
 
     .card-meta {
         display: flex;
-        gap: .5rem;
-        font-size: .83rem;
-        color: #6b7b93;
-        margin-top: .35rem;
-        flex-wrap: wrap
+        gap: .6rem;
+        font-size: .84rem;
+        color: #4f6f87;
+        margin-top: .4rem;
+        flex-wrap: wrap;
     }
 
     .tags {
         display: flex;
-        gap: .35rem;
+        gap: .4rem;
         flex-wrap: wrap;
-        margin-top: .4rem
+        margin-top: .5rem;
     }
 
     .tag {
-        padding: .12rem .4rem;
-        border-radius: 6px;
-        font-size: .76rem;
-        color: #fff
+        padding: .18rem .52rem;
+        border-radius: 999px;
+        font-size: .78rem;
+        font-weight: 700;
+        color: #0b2a3a;
+        box-shadow: 0 0 0 1px var(--chip-border) inset, 0 6px 12px rgba(118,169,213,.15);
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
     .card-actions {
-        position: absolute;
-        top: .35rem;
-        right: .4rem;
         display: flex;
-        gap: .35rem;
+        gap: .25rem;
     }
 
         .card-actions button {
-            border: none;
+            border: 1px solid transparent;
             background: transparent;
-            line-height: 1;
-            padding: .1rem .2rem;
-            cursor: pointer
+            padding: .18rem;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .card-actions svg {
+            width: 18px;
+            height: 18px;
+            display: block;
+            stroke: #6c8aa0;
+            fill: none;
+            stroke-width: 2;
+        }
+
+        .card-actions button:hover {
+            background: #eaf6ff;
+            border-color: #cfe2ff;
+        }
+
+            .card-actions button:hover svg {
+                stroke: #1f3b4f;
+            }
+
+        .card-actions .btn-del:hover svg {
+            stroke: #d13b3b;
+        }
+
+    .column ul.drag-over {
+        outline: 2px dashed #9cd9ff;
+        outline-offset: 6px;
+    }
+
+    .card-item.dragging {
+        opacity: .85;
+        transform: rotate(.2deg) scale(.995);
+    }
+
+    .modal-content {
+        background: #fff !important;
+        color: #1f3b4f;
+        border: 1px solid #dfeaff;
+        box-shadow: 0 30px 60px rgba(118,169,213,.25);
+    }
+
+    .form-label {
+        color: #21445a;
+        font-weight: 700;
+    }
+
+    .form-control, .form-select {
+        background: #fff;
+        border: 1px solid #cfe2ff;
+        color: #1f3b4f;
+    }
+
+        .form-control:focus, .form-select:focus {
+            background: #fff;
+            color: #0b2a3a;
+            border-color: #9ed4ff;
+            box-shadow: 0 0 0 .2rem #bfe6ff66;
+        }
+
+    /* ====== Color picker ====== */
+    .color-row {
+        display: flex;
+        align-items: center;
+        gap: .75rem;
+        position: relative;
+    }
+
+    .chip-preview {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        border: 1px solid #cfe2ff;
+        background: #8ED1FC;
+        box-shadow: inset 0 0 0 2px #ffffffaa;
+    }
+
+    .color-popover {
+        position: absolute;
+        top: 48px;
+        left: 0;
+        z-index: 1056;
+        background: #fff;
+        border: 1px solid #e3eeff;
+        border-radius: 12px;
+        padding: .75rem;
+        box-shadow: 0 12px 30px rgba(65,105,165,.18);
+        width: 260px;
+    }
+
+    .swatch-grid {
+        display: grid;
+        grid-template-columns: repeat(5,1fr);
+        gap: .5rem;
+    }
+
+    .swatch {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        border: 1px solid rgba(0,0,0,.08);
+        cursor: pointer;
+        box-shadow: inset 0 0 0 2px #ffffffaa;
+    }
+
+        .swatch:focus {
+            outline: 2px solid #4ea4ff;
+            outline-offset: 2px;
+        }
+
+        .swatch.is-active {
+            box-shadow: 0 0 0 2px #4ea4ff;
+        }
+
+    .palette-inline {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+
+        .palette-inline .swatch {
+            width: 22px;
+            height: 22px;
+            border-radius: 6px;
+        }
+
+    /* ===== Chips con borrado + selección visible (modal Historia) ===== */
+    #hist-etiquetas-chips .chip {
+        --bg: #cfe9ff;
+        display: inline-flex;
+        align-items: center;
+        gap: .45rem;
+        background: var(--bg);
+        border-radius: 999px;
+        padding: .35rem .55rem;
+        box-shadow: 0 0 0 1px var(--chip-border) inset, 0 6px 12px rgba(118,169,213,.15);
+        font-weight: 700;
+        font-size: .85rem;
+        cursor: pointer;
+        position: relative;
+        border: 2px solid transparent;
+        user-select: none;
+    }
+
+        #hist-etiquetas-chips .chip.is-selected {
+            border-color: #1e88e5;
+            box-shadow: 0 0 0 2px #bcdcff, 0 6px 12px rgba(118,169,213,.25);
+        }
+
+            #hist-etiquetas-chips .chip.is-selected::after {
+                content: "✓";
+                position: absolute;
+                right: -6px;
+                top: -6px;
+                width: 18px;
+                height: 18px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 50%;
+                background: #fff;
+                color: #1e88e5;
+                font-weight: 900;
+                box-shadow: 0 0 0 1px #cfe2ff, 0 2px 6px rgba(0,0,0,.12);
+            }
+
+    .chip .del-tag {
+        width: 22px;
+        height: 22px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        border: 1px solid transparent;
+        background: #ffffff55;
+        cursor: pointer;
+    }
+
+        .chip .del-tag:hover {
+            background: #fff;
+            border-color: #cfe2ff;
+        }
+
+        .chip .del-tag svg {
+            width: 14px;
+            height: 14px;
+            stroke: #1f3b4f;
+            stroke-width: 2;
+            fill: none;
+        }
+
+        .chip .del-tag:hover svg {
+            stroke: #d13b3b;
+        }
+
+    /* Chips del modal Etiquetas */
+    #listaEtiquetas .tag-chip {
+        --bg: #9cc4dd;
+        display: inline-flex;
+        align-items: center;
+        gap: .45rem;
+        background: var(--bg);
+        border-radius: 999px;
+        padding: .35rem .55rem;
+        box-shadow: 0 0 0 1px var(--chip-border) inset, 0 6px 12px rgba(118,169,213,.15);
+        font-weight: 700;
+        font-size: .85rem;
+    }
+
+        #listaEtiquetas .tag-chip .n {
+            max-width: 180px;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+
+        #listaEtiquetas .tag-chip .del-tag {
+            width: 22px;
+            height: 22px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            border: 1px solid transparent;
+            background: #ffffff55;
+            cursor: pointer;
+        }
+
+            #listaEtiquetas .tag-chip .del-tag:hover {
+                background: #fff;
+                border-color: #cfe2ff;
+            }
+
+            #listaEtiquetas .tag-chip .del-tag svg {
+                width: 14px;
+                height: 14px;
+                stroke: #1f3b4f;
+                stroke-width: 2;
+                fill: none;
+            }
+
+            #listaEtiquetas .tag-chip .del-tag:hover svg {
+                stroke: #d13b3b;
+            }
+
+    /* ===== Scrollbars ===== */
+    ::-webkit-scrollbar {
+        height: 12px;
+        width: 12px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: linear-gradient(180deg, #cfe9ff, #e7e2ff);
+        border-radius: 999px;
+        border: 2px solid transparent;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: #f2f8ff;
+        border-radius: 999px;
+    }
+
+    /* ===== Windows 7 dialog styles ===== */
+    .win7-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,.18);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 2000;
+    }
+
+    .win7-window {
+        width: 520px;
+        background: #f2f2f2;
+        border-radius: 6px;
+        box-shadow: 0 20px 60px rgba(0,0,0,.35);
+        border: 1px solid #6aa1d2;
+        overflow: hidden;
+    }
+
+    .win7-titlebar {
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 6px 0 10px;
+        background: linear-gradient(#1f4e86, #2f6fb0);
+        color: #fff;
+        text-shadow: 0 1px 0 rgba(0,0,0,.35);
+        border-bottom: 1px solid #1b3f69;
+    }
+
+    .win7-title {
+        font-weight: 600;
+        font-size: 13.5px;
+        letter-spacing: .2px;
+    }
+
+    .win7-close {
+        width: 28px;
+        height: 20px;
+        border: 1px solid #b33;
+        border-radius: 3px;
+        background: linear-gradient(#f66,#d22);
+        color: #fff;
+        line-height: 18px;
+        text-align: center;
+        padding: 0;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: 700;
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,.4);
+    }
+
+        .win7-close:hover {
+            filter: brightness(1.05);
+        }
+
+    .win7-body {
+        display: flex;
+        gap: 12px;
+        padding: 14px;
+        background: #f7f7f7;
+    }
+
+    .win7-icon svg {
+        width: 42px;
+        height: 42px;
+        fill: #f5d96c;
+        stroke: #8c6b00;
+        stroke-width: 1.4;
+    }
+
+    .win7-text {
+        flex: 1;
+    }
+
+    .win7-heading {
+        font-weight: 700;
+        color: #2b2b2b;
+        margin-top: 2px;
+        margin-bottom: 6px;
+    }
+
+    .win7-message {
+        color: #3a3a3a;
+    }
+
+    .win7-buttons {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        padding: 10px 12px;
+        background: #ececec;
+        border-top: 1px solid #d0d0d0;
+    }
+
+    .win7-btn {
+        min-width: 110px;
+        padding: 6px 12px;
+        font-weight: 600;
+        font-size: 13px;
+        border-radius: 3px;
+        cursor: pointer;
+        background: linear-gradient(#f4f4f4,#e0e0e0);
+        border: 1px solid #b5b5b5;
+        color: #222;
+        box-shadow: inset 0 0 0 1px #fff;
+    }
+
+        .win7-btn.primary {
+            background: linear-gradient(#e6f1ff,#cfe4ff);
+            border-color: #8aaee2;
+            color: #083b7c;
+            box-shadow: inset 0 0 0 1px #fff, 0 0 0 1px rgba(138,174,226,.25);
+        }
+
+        .win7-btn:focus {
+            outline: 2px solid #7fb3ff;
+            outline-offset: 1px;
         }
 </style>
 
 @section Scripts {
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
     <script>
         (() => {
             const API_BASE = "@apiBase";
             const tableroId = @Model;
 
-            let columnasPorNombre = {};     // { 'backlog': 1, ... }
-            let historiasById = {};         // cache de historias
-            let modal, submitBtn, frm;
+            let columnasPorNombre = {};
+            let historiasById = {};
+            let etiquetasCache = [];
+            let modal, submitBtn, frm, modalTags, frmTags, btnCreateTag;
+
+            // DnD
+            let draggingEl = null;
+
+            const PRESET_COLORS = [
+                '#FF6D00', '#FFA000', '#66BB6A', '#26A69A', '#8ED1FC',
+                '#42A5F5', '#1E88E5', '#B0BEC5', '#E53935', '#F06292',
+                '#8E24AA', '#7E57C2', '#5C6BC0', '#00ACC1', '#90A4AE',
+                '#9E9E9E', '#00C853', '#FFAB00', '#FF5252', '#3949AB'
+            ];
+
+            /* ===== Windows 7 confirm dialog ===== */
+            function showWin7Confirm({ title = '', heading = 'Confirmación requerida', message = '¿Deseas continuar?', primaryText = 'Aceptar', secondaryText = 'Cancelar' } = {}) {
+                return new Promise(resolve => {
+                    const overlay = document.getElementById('win7Confirm');
+                    const win = overlay.querySelector('.win7-window');
+                    const btnPrimary = overlay.querySelector('.js-primary');
+                    const btnSecondary = overlay.querySelector('.js-secondary');
+                    const btnClose = overlay.querySelector('.win7-close');
+
+                    overlay.querySelector('#win7Title').textContent = title;
+                    overlay.querySelector('#win7Heading').textContent = heading;
+                    overlay.querySelector('#win7Msg').textContent = message;
+                    btnPrimary.textContent = primaryText;
+                    btnSecondary.textContent = secondaryText;
+
+                    const cleanup = () => {
+                        document.removeEventListener('keydown', onKey);
+                        btnPrimary.removeEventListener('click', onYes);
+                        btnSecondary.removeEventListener('click', onNo);
+                        btnClose.removeEventListener('click', onNo);
+                        overlay.hidden = true;
+                    };
+                    const onYes = () => { cleanup(); resolve(true); };
+                    const onNo = () => { cleanup(); resolve(false); };
+                    const onKey = (e) => {
+                        if (e.key === 'Escape') { e.preventDefault(); onNo(); }
+                        if (e.key === 'Enter') { e.preventDefault(); onYes(); }
+                    };
+
+                    btnPrimary.addEventListener('click', onYes);
+                    btnSecondary.addEventListener('click', onNo);
+                    btnClose.addEventListener('click', onNo);
+                    document.addEventListener('keydown', onKey);
+
+                    overlay.hidden = false;
+                    // Focus al botón principal
+                    setTimeout(() => btnPrimary.focus(), 0);
+                });
+            }
 
             document.addEventListener('DOMContentLoaded', async () => {
+                await loadBoard();
+
+                // Historias
                 modal = new bootstrap.Modal(document.getElementById('modalHistoria'));
                 submitBtn = document.getElementById('btnSubmit');
                 frm = document.getElementById('frmHistoria');
-
                 document.getElementById('btn-add').addEventListener('click', onAdd);
                 frm.addEventListener('submit', onSubmitForm);
 
-                await loadBoard();
+                // Etiquetas (modal)
+                modalTags = new bootstrap.Modal(document.getElementById('modalEtiqueta'));
+                frmTags = document.getElementById('frmEtiqueta');
+                btnCreateTag = document.getElementById('btnCreateTag');
+                frmTags.addEventListener('submit', onSubmitEtiqueta);
+
+                // Color UI
+                const colorInput = document.getElementById('etqColor');
+                const chip = document.getElementById('colorChip');
+                const pop = document.getElementById('colorPopover');
+                const grid = document.getElementById('swatchGrid');
+                const inlinePal = document.getElementById('colorPalette');
+                const LAST_TAG_COLOR_KEY = 'kanban.lastTagColor';
+
+                const setColor = (hex) => {
+                    if (!hex) return;
+                    const v = hex.replace('#', '').toUpperCase();
+                    colorInput.value = v;
+                    chip.style.background = '#' + v;
+                    try { localStorage.setItem(LAST_TAG_COLOR_KEY, '#' + v); } catch { }
+                    [...grid.querySelectorAll('.swatch')]
+                        .forEach(s => s.classList.toggle('is-active', s.dataset.hex.toUpperCase() === '#' + v));
+                };
+
+                const renderSwatches = (container) => {
+                    container.innerHTML = '';
+                    PRESET_COLORS.forEach(hex => {
+                        const b = document.createElement('button');
+                        b.type = 'button'; b.className = 'swatch'; b.style.background = hex; b.dataset.hex = hex;
+                        b.addEventListener('click', () => { setColor(hex); hidePopover(); });
+                        container.appendChild(b);
+                    });
+                };
+                renderSwatches(grid); renderSwatches(inlinePal);
+
+                const showPopover = () => pop.hidden = false;
+                const hidePopover = () => pop.hidden = true;
+                const togglePopover = () => pop.hidden ? showPopover() : hidePopover();
+                chip.addEventListener('click', togglePopover);
+                chip.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') togglePopover(); });
+                document.addEventListener('click', e => { if (!pop.hidden && !pop.contains(e.target) && !chip.contains(e.target)) hidePopover(); });
+                document.addEventListener('keydown', e => { if (e.key === 'Escape') hidePopover(); });
+
+                const last = localStorage.getItem(LAST_TAG_COLOR_KEY) || '#8ED1FC';
+                setColor(last);
+
+                document.getElementById('btn-tags').addEventListener('click', async () => {
+                    await loadEtiquetas();
+                    document.getElementById('etqNombre').value = '';
+                    setColor(localStorage.getItem(LAST_TAG_COLOR_KEY) || '#8ED1FC');
+                    document.getElementById('msgTags').textContent = '';
+                    modalTags.show();
+                });
+
+                colorInput.addEventListener('input', e => {
+                    const val = e.target.value.trim();
+                    if (/^([0-9A-F]{6}|[0-9A-F]{3})$/i.test(val)) setColor('#' + val);
+                });
+
+                // Delegación: borrar etiquetas en ambos contenedores
+                document.getElementById('listaEtiquetas').addEventListener('click', onAnyDeleteClick);
+                document.getElementById('hist-etiquetas-chips').addEventListener('click', onAnyDeleteClick);
             });
 
+            function contrastText(hex) {
+                if (!hex) return '#fff';
+                const h = hex.replace('#', '');
+                const r = parseInt(h.length === 3 ? h[0] + h[0] : h.slice(0, 2), 16);
+                const g = parseInt(h.length === 3 ? h[1] + h[1] : h.slice(2, 4), 16);
+                const b = parseInt(h.length === 3 ? h[2] + h[2] : h.slice(4, 6), 16);
+                const yiq = (r * 299 + g * 587 + b * 114) / 1000;
+                return yiq >= 128 ? '#0b2a3a' : '#ffffff';
+            }
+            function fmtDate(iso) { if (!iso) return ""; const d = new Date(iso); return isNaN(d) ? "" : d.toLocaleDateString(); }
+
+            // ===== Board =====
             async function loadBoard() {
                 const container = document.getElementById('board');
-                container.innerHTML = '';
-                historiasById = {};
-                columnasPorNombre = {};
+                container.innerHTML = ''; historiasById = {}; columnasPorNombre = {};
                 try {
                     const res = await fetch(`${API_BASE}/api/historias/board/${tableroId}`);
                     if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -172,39 +868,17 @@
                     (data.columnas || []).forEach(c => columnasPorNombre[(c.nombre || '').toLowerCase()] = c.columnaId);
 
                     for (const col of (data.columnas || [])) {
-                        const colDiv = document.createElement('div');
-                        colDiv.className = 'column';
+                        const colDiv = document.createElement('div'); colDiv.className = 'column';
                         const h3 = document.createElement('h3'); h3.textContent = col.nombre;
                         const ul = document.createElement('ul'); ul.dataset.columnaId = col.columnaId;
+                        attachListDnDHandlers(ul);
 
                         for (const h of (col.historias || [])) {
-                            historiasById[h.historiaId] = h; // cache
-                            const li = renderCard(h);
-                            ul.appendChild(li);
+                            historiasById[h.historiaId] = h;
+                            ul.appendChild(renderCard(h));
                         }
-
-                        colDiv.appendChild(h3);
-                        colDiv.appendChild(ul);
-                        container.appendChild(colDiv);
+                        colDiv.appendChild(h3); colDiv.appendChild(ul); container.appendChild(colDiv);
                     }
-
-                    document.querySelectorAll('[data-columna-id]').forEach(list => {
-                        new Sortable(list, {
-                            group: 'board', animation: 150,
-                            onEnd: async (e) => {
-                                const historiaId = +e.item.dataset.id;
-                                const newColId = +e.to.dataset.columnaId;
-                                const newIndex = e.newIndex;
-                                const r = await fetch(`${API_BASE}/api/historias/${historiaId}/status`, {
-                                    method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({ columnaId: newColId, newIndex })
-                                });
-                                if (!r.ok && r.status !== 204) alert('No se pudo mover la tarjeta');
-                                await loadBoard();
-                            }
-                        });
-                    });
-
                     document.getElementById('btn-add').disabled = false;
                 } catch (err) {
                     console.error(err);
@@ -212,104 +886,134 @@
                 }
             }
 
-            // === NUEVO: pinta toda la info disponible ===
-            function fmtDate(iso) {
-                if (!iso) return "";
-                const d = new Date(iso);
-                return isNaN(d) ? "" : d.toLocaleDateString();
-            }
             function renderCard(h) {
-                const li = document.createElement('li');
-                li.className = 'card-item';
-                li.dataset.id = h.historiaId;
-
-                // Campos posibles desde la API (muestra solo si vienen):
+                const li = document.createElement('li'); li.className = 'card-item'; li.dataset.id = h.historiaId;
+                li.setAttribute('draggable', 'true');
                 const desc = h.descripcion?.trim();
-                const resp = (h.responsableNombre ?? null) || (h.responsableId != null ? `#${h.responsableId}` : null);
                 const vence = fmtDate(h.fechaVencimiento);
                 const tags = Array.isArray(h.etiquetas) ? h.etiquetas : [];
-                const comments = (typeof h.comentarios === 'number') ? h.comentarios : null;
+                const svgEdit = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"/></svg>`;
+                const svgTrash = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg>`;
 
                 li.innerHTML = `
-                          <div class="card-title">${h.titulo ?? ''}</div>
-                          ${desc ? `<div class="card-desc">${desc}</div>` : ``}
-                          ${(resp || vence || comments != null) ? `
-                            <div class="card-meta">
-                              ${resp ? `<span>👤 ${resp}</span>` : ``}
-                              ${vence ? `<span>🗓 ${vence}</span>` : ``}
-                              ${comments != null ? `<span>💬 ${comments}</span>` : ``}
-                            </div>` : ``}
-                          ${tags.length ? `
-                            <div class="tags">
-                              ${tags.map(e => `<span class="tag" style="background:${e.color ?? '#64748b'}">${e.nombre ?? ''}</span>`).join('')}
-                            </div>` : ``}
-                          <div class="card-actions">
-                            <button title="Editar" class="btn-edit" aria-label="Editar">✏️</button>
-                            <button title="Eliminar" class="btn-del" aria-label="Eliminar">🗑️</button>
-                          </div>
-                        `;
+                  <div class="card-head">
+                    <div class="card-title" title="${h.titulo ?? ''}">${h.titulo ?? ''}</div>
+                    <div class="card-actions">
+                      <button type="button" class="btn-edit" title="Editar" aria-label="Editar">${svgEdit}</button>
+                      <button type="button" class="btn-del"  title="Eliminar" aria-label="Eliminar">${svgTrash}</button>
+                    </div>
+                  </div>
+                  ${desc ? `<div class="card-desc">${desc}</div>` : ''}
+                  ${vence ? `<div class="card-meta"><span>🗓 ${vence}</span></div>` : ''}
+                  ${tags.length ? `
+                    <div class="tags">
+                      ${tags.map(e => {
+                    const col = e.color ?? '#9cc4dd';
+                    const tc = contrastText(col);
+                    const idAttr = typeof e.etiquetaId === 'number' ? ` data-etiqueta-id="${e.etiquetaId}"` : '';
+                    return `<span class="tag"${idAttr} style="background:${col};color:${tc}">${e.nombre ?? ''}</span>`;
+                }).join('')}
+                    </div>`: ''}`;
 
-                // acciones
-                li.querySelector('.btn-edit')?.addEventListener('click', (ev) => { ev.stopPropagation(); onEdit(h.historiaId); });
-                li.querySelector('.btn-del')?.addEventListener('click', (ev) => { ev.stopPropagation(); onDelete(h.historiaId); });
+                li.addEventListener('dragstart', e => {
+                    draggingEl = li; li.classList.add('dragging');
+                    e.dataTransfer.setData('text/plain', String(h.historiaId));
+                    e.dataTransfer.effectAllowed = 'move';
+                });
+                li.addEventListener('dragend', () => {
+                    li.classList.remove('dragging'); draggingEl = null;
+                    document.querySelectorAll('.column ul').forEach(u => u.classList.remove('drag-over'));
+                });
+                li.querySelector('.btn-edit')?.addEventListener('click', ev => { ev.stopPropagation(); onEdit(h.historiaId); });
+                li.querySelector('.btn-del')?.addEventListener('click', async ev => {
+                    ev.stopPropagation();
+                    if (!await showWin7Confirm({
+                        heading: '¿Eliminar historia?',
+                        message: `Se eliminará "${(h.titulo ?? 'esta historia')}". Esta acción no se puede deshacer.`,
+                        primaryText: 'Eliminar', secondaryText: 'Cancelar'
+                    })) return;
+                    await onDelete(h.historiaId, /*skipAsk*/true);
+                });
                 li.addEventListener('dblclick', () => onEdit(h.historiaId));
-
                 return li;
             }
 
-            // ---- Crear ----
+            function attachListDnDHandlers(list) {
+                list.addEventListener('dragover', e => {
+                    e.preventDefault(); list.classList.add('drag-over');
+                    const after = getDragAfterElement(list, e.clientY);
+                    if (!draggingEl) return;
+                    if (after == null) list.appendChild(draggingEl);
+                    else list.insertBefore(draggingEl, after);
+                });
+                list.addEventListener('drop', async e => {
+                    e.preventDefault(); list.classList.remove('drag-over');
+                    if (!draggingEl) return;
+                    const historiaId = +draggingEl.dataset.id;
+                    const newColId = +list.dataset.columnaId;
+                    const newIndex = Array.from(list.children).indexOf(draggingEl);
+                    try {
+                        const r = await fetch(`${API_BASE}/api/historias/${historiaId}/status`, {
+                            method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ columnaId: newColId, newIndex })
+                        });
+                        if (!r.ok && r.status !== 204) { alert('No se pudo mover la tarjeta'); await loadBoard(); }
+                    } catch (err) { console.error(err); await loadBoard(); }
+                });
+                list.addEventListener('dragleave', e => { if (e.target === list) list.classList.remove('drag-over'); });
+            }
+            function getDragAfterElement(container, y) {
+                const els = [...container.querySelectorAll('.card-item:not(.dragging)')];
+                return els.reduce((closest, child) => {
+                    const box = child.getBoundingClientRect();
+                    const offset = y - (box.top + box.height / 2);
+                    if (offset < 0 && offset > closest.offset) return { offset, element: child };
+                    return closest;
+                }, { offset: Number.NEGATIVE_INFINITY, element: null }).element;
+            }
+
             async function onAdd() {
                 const backlogId = columnasPorNombre['backlog']
                     ?? (+document.querySelector('[data-columna-id]')?.dataset.columnaId || null);
                 if (!backlogId) { alert('No encuentro la columna Backlog'); return; }
-
-                openModal({
-                    mode: 'create',
-                    data: { historiaId: '', titulo: '', descripcion: '', responsableId: '', fechaVenc: '' },
-                    columnaId: backlogId
-                });
+                openModal({ mode: 'create', data: { historiaId: '', titulo: '', descripcion: '', fechaVenc: '' }, columnaId: backlogId });
             }
-
-            // ---- Editar ----
             function onEdit(id) {
-                const h = historiasById[id];
-                if (!h) { alert('No encuentro la historia'); return; }
+                const h = historiasById[id]; if (!h) { alert('No encuentro la historia'); return; }
                 openModal({
                     mode: 'edit',
                     data: {
-                        historiaId: h.historiaId,
-                        titulo: h.titulo ?? '',
-                        descripcion: h.descripcion ?? '',
-                        responsableId: h.responsableId ?? '',
-                        // si el API trae fechaVencimiento, pásala al input date
+                        historiaId: h.historiaId, titulo: h.titulo ?? '', descripcion: h.descripcion ?? '',
                         fechaVenc: h.fechaVencimiento ? new Date(h.fechaVencimiento).toISOString().slice(0, 10) : ''
                     },
                     columnaId: +document.querySelector(`.card-item[data-id="${id}"]`)?.closest('[data-columna-id]')?.dataset.columnaId || ''
                 });
             }
-
-            // ---- Eliminar ----
-            async function onDelete(id) {
-                if (!confirm('¿Eliminar esta historia?')) return;
+            async function onDelete(id, skipAsk = false) {
+                if (!skipAsk) {
+                    if (!await showWin7Confirm({
+                        heading: '¿Eliminar historia?',
+                        message: `Se eliminará "${(historiasById[id]?.titulo ?? 'esta historia')}". Esta acción no se puede deshacer.`,
+                        primaryText: 'Eliminar', secondaryText: 'Cancelar'
+                    })) return;
+                }
                 const r = await fetch(`${API_BASE}/api/historias/${id}`, { method: 'DELETE' });
                 if (!r.ok && r.status !== 204) { alert('No se pudo eliminar'); return; }
                 await loadBoard();
             }
 
-            // ---- Modal helpers ----
-            function openModal({ mode, data, columnaId }) {
-                document.getElementById('modalHistoriaLabel').textContent =
-                    mode === 'create' ? 'Nueva historia' : 'Editar historia';
-
+            async function openModal({ mode, data, columnaId }) {
+                document.getElementById('modalHistoriaLabel').textContent = mode === 'create' ? 'Nueva historia' : 'Editar historia';
                 document.getElementById('historiaId').value = data.historiaId || '';
                 document.getElementById('columnaId').value = columnaId || '';
                 document.getElementById('titulo').value = data.titulo || '';
                 document.getElementById('descripcion').value = data.descripcion || '';
-                document.getElementById('responsableId').value = data.responsableId || '';
                 document.getElementById('fechaVenc').value = data.fechaVenc || '';
-
                 document.getElementById('msgForm').textContent = '';
-                submitBtn.dataset.mode = mode;
+                document.getElementById('btnSubmit').dataset.mode = mode;
+
+                if (mode === 'edit' && data.historiaId) await preloadStoryLabels(data.historiaId);
+                else await loadBoardLabels([]);
                 modal.show();
             }
 
@@ -317,39 +1021,36 @@
                 ev.preventDefault();
                 submitBtn.disabled = true;
 
-                const mode = submitBtn.dataset.mode;
-                const historiaId = document.getElementById('historiaId').value.trim();
-                const columnaId = +document.getElementById('columnaId').value || null;
+                const mode = document.getElementById('btnSubmit').dataset.mode;
+                const historiaIdInput = document.getElementById('historiaId').value.trim();
+                theCol = +document.getElementById('columnaId').value || null;
                 const titulo = document.getElementById('titulo').value.trim();
                 const descripcion = document.getElementById('descripcion').value.trim();
-                const respStr = document.getElementById('responsableId').value.trim();
                 const fechaStr = document.getElementById('fechaVenc').value;
-
-                const responsableId = respStr ? +respStr : null;
                 const fechaVenc = fechaStr ? new Date(fechaStr + 'T00:00:00').toISOString() : null;
 
                 try {
-                    let r;
+                    let r, historiaIdCreada = null;
                     if (mode === 'create') {
-                        const body = { titulo, descripcion: descripcion || null, columnaId, responsableId };
                         r = await fetch(`${API_BASE}/api/historias`, {
                             method: 'POST', headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(body)
+                            body: JSON.stringify({ titulo, descripcion: descripcion || null, columnaId: theCol })
                         });
                         if (!r.ok) throw new Error('No se pudo crear la historia');
+                        try { const created = await r.json(); historiaIdCreada = created?.historiaId ?? created?.id ?? null; } catch { }
+                        if (!historiaIdCreada) {
+                            const loc = r.headers.get('Location'); const m = loc?.match(/\/(\d+)(?:\?.*)?$/); if (m) historiaIdCreada = +m[1];
+                        }
                     } else {
-                        const body = {
-                            titulo: titulo || null,
-                            descripcion: descripcion || null,
-                            responsableId,
-                            fechaVencimiento: fechaVenc
-                        };
-                        r = await fetch(`${API_BASE}/api/historias/${historiaId}`, {
+                        r = await fetch(`${API_BASE}/api/historias/${historiaIdInput}`, {
                             method: 'PUT', headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(body)
+                            body: JSON.stringify({ titulo: titulo || null, descripcion: descripcion || null, fechaVencimiento: fechaVenc })
                         });
                         if (!r.ok && r.status !== 204) throw new Error('No se pudo actualizar');
                     }
+
+                    const idParaEtiquetas = (mode === 'edit') ? +historiaIdInput : +historiaIdCreada;
+                    if (idParaEtiquetas) await saveStoryLabels(idParaEtiquetas);
 
                     modal.hide();
                     await loadBoard();
@@ -358,6 +1059,176 @@
                     document.getElementById('msgForm').textContent = 'Ocurrió un error. Revisa la consola.';
                 } finally {
                     submitBtn.disabled = false;
+                }
+            }
+
+            // ===== Etiquetas en modal Historia =====
+            async function loadBoardLabels(selectedIds = []) {
+                const res = await fetch(`${API_BASE}/api/etiquetas/board/${tableroId}`);
+                const all = await res.json();
+                renderLabelsPicker(all, selectedIds);
+            }
+            async function preloadStoryLabels(historiaId) {
+                try {
+                    const actuales = await (await fetch(`${API_BASE}/api/historias/${historiaId}/etiquetas`)).json();
+                    await loadBoardLabels(actuales.map(x => x.etiquetaId));
+                } catch {
+                    await loadBoardLabels([]);
+                }
+            }
+            function renderLabelsPicker(all, selectedIds) {
+                const cont = document.getElementById('hist-etiquetas-chips');
+                cont.innerHTML = '';
+
+                const svgTrashMini = `<svg viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg>`;
+
+                all.forEach(e => {
+                    const bg = e.color ?? '#cfe9ff';
+                    const chip = document.createElement('span');
+                    chip.className = 'chip';
+                    chip.tabIndex = 0;
+                    chip.setAttribute('role', 'button');
+                    chip.dataset.id = e.etiquetaId;
+                    chip.style.setProperty('--bg', bg);
+                    chip.style.color = contrastText(bg);
+                    chip.innerHTML = `<span class="txt">${e.nombre}</span>
+                                      <button type="button" class="del-tag" title="Eliminar etiqueta" aria-label="Eliminar etiqueta">${svgTrashMini}</button>`;
+                    if (selectedIds.includes(e.etiquetaId)) chip.classList.add('is-selected');
+
+                    chip.addEventListener('click', (ev) => {
+                        if (ev.target.closest('.del-tag')) return;
+                        chip.classList.toggle('is-selected');
+                    });
+                    chip.addEventListener('keydown', (ev) => {
+                        if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); chip.click(); }
+                    });
+
+                    cont.appendChild(chip);
+                });
+            }
+            async function saveStoryLabels(historiaId) {
+                const ids = Array.from(document.querySelectorAll('#hist-etiquetas-chips .chip.is-selected'))
+                    .map(b => parseInt(b.dataset.id));
+                await fetch(`${API_BASE}/api/historias/${historiaId}/etiquetas`, {
+                    method: 'PUT', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ etiquetaIds: ids })
+                });
+            }
+
+            // ===== Etiquetas (modal tablero) con listado + borrado =====
+            async function loadEtiquetas() {
+                try {
+                    const r = await fetch(`${API_BASE}/api/etiquetas/board/${tableroId}`);
+                    if (!r.ok) throw new Error('No se pudo obtener etiquetas');
+                    etiquetasCache = await r.json();
+
+                    const cont = document.getElementById('listaEtiquetas');
+                    if (!etiquetasCache.length) {
+                        cont.innerHTML = '<span class="text-muted">Aún no hay etiquetas</span>';
+                        return;
+                    }
+                    const svgTrashMini = `<svg viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg>`;
+                    cont.innerHTML = etiquetasCache.map(e => {
+                        const bg = e.color ?? '#9cc4dd';
+                        const fg = contrastText(bg);
+                        const name = (e.nombre ?? '').replace(/"/g, '&quot;');
+                        return `<span class="tag-chip" data-id="${e.etiquetaId}" style="--bg:${bg};color:${fg}">
+                                  <span class="n">${name}</span>
+                                  <button type="button" class="del-tag" title="Eliminar etiqueta" aria-label="Eliminar etiqueta">${svgTrashMini}</button>
+                                </span>`;
+                    }).join('');
+                } catch (e) {
+                    console.error(e);
+                    document.getElementById('listaEtiquetas').innerHTML = '<span class="text-danger">Error cargando etiquetas.</span>';
+                }
+            }
+
+            // Quita la etiqueta eliminada de todo el UI (tarjetas + estado local)
+            function removeEtiquetaFromUI(tagId) {
+                document.querySelectorAll(`.tag[data-etiqueta-id="${tagId}"]`).forEach(el => {
+                    const parent = el.parentElement;
+                    el.remove();
+                    if (parent && parent.children.length === 0) parent.remove();
+                });
+                Object.values(historiasById).forEach(h => {
+                    if (Array.isArray(h.etiquetas)) h.etiquetas = h.etiquetas.filter(e => e.etiquetaId !== tagId);
+                });
+            }
+
+            // Click papelera en chips/lista
+            async function onAnyDeleteClick(e) {
+                const btn = e.target.closest('button.del-tag');
+                if (!btn) return;
+                const chipEl = btn.closest('[data-id]');
+                const id = parseInt(chipEl.dataset.id);
+                const nombre = chipEl.querySelector('.n, .txt')?.textContent?.trim() || '';
+                if (!await showWin7Confirm({
+                    heading: '¿Eliminar etiqueta?',
+                    message: `Se eliminará la etiqueta "${nombre}". También se quitará de las tarjetas.`,
+                    primaryText: 'Eliminar', secondaryText: 'Cancelar'
+                })) return;
+                await onDeleteEtiqueta(id, nombre, /*skipAsk*/true);
+                e.stopPropagation();
+            }
+
+            async function onDeleteEtiqueta(id, nombre, skipAsk = false) {
+                if (!id) return;
+                if (!skipAsk) {
+                    if (!await showWin7Confirm({
+                        heading: '¿Eliminar etiqueta?',
+                        message: `Se eliminará la etiqueta "${nombre}". También se quitará de las tarjetas.`,
+                        primaryText: 'Eliminar', secondaryText: 'Cancelar'
+                    })) return;
+                }
+                try {
+                    const r = await fetch(`${API_BASE}/api/etiquetas/${id}`, { method: 'DELETE' });
+                    if (!r.ok && r.status !== 204) {
+                        document.getElementById('msgTags').textContent = 'No se pudo eliminar la etiqueta.';
+                        return;
+                    }
+                    document.getElementById('msgTags').textContent = '';
+                    try { await loadEtiquetas(); } catch { }
+
+                    try {
+                        const selectedNow = Array.from(document.querySelectorAll('#hist-etiquetas-chips .chip.is-selected'))
+                            .map(x => +x.dataset.id)
+                            .filter(x => x !== id);
+                        await loadBoardLabels(selectedNow);
+                    } catch { }
+
+                    removeEtiquetaFromUI(id);
+                } catch (err) {
+                    console.error(err);
+                    document.getElementById('msgTags').textContent = 'Ocurrió un error al eliminar.';
+                }
+            }
+
+            async function onSubmitEtiqueta(ev) {
+                ev.preventDefault();
+                btnCreateTag.disabled = true;
+                document.getElementById('msgTags').textContent = '';
+
+                const nombre = document.getElementById('etqNombre').value.trim();
+                const color = '#' + document.getElementById('etqColor').value.trim();
+                if (!nombre) { document.getElementById('msgTags').textContent = 'Ingresa un nombre.'; btnCreateTag.disabled = false; return; }
+
+                try {
+                    const r = await fetch(`${API_BASE}/api/etiquetas`, {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ tableroId, nombre, color })
+                    });
+                    if (r.status === 409) document.getElementById('msgTags').textContent = 'Ya existe una etiqueta con ese nombre en este tablero.';
+                    else if (!r.ok) document.getElementById('msgTags').textContent = 'No se pudo crear la etiqueta.';
+                    else {
+                        document.getElementById('etqNombre').value = '';
+                        await loadEtiquetas();
+                        try { await loadBoardLabels([]); } catch { }
+                    }
+                } catch (e) {
+                    console.error(e);
+                    document.getElementById('msgTags').textContent = 'Ocurrió un error.';
+                } finally {
+                    btnCreateTag.disabled = false;
                 }
             }
         })();

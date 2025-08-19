@@ -6,25 +6,11 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace K.Data.Migrations
 {
     /// <inheritdoc />
-    public partial class InitKanban : Migration
+    public partial class InitKanban_Restrict2 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.CreateTable(
-                name: "Etiquetas",
-                columns: table => new
-                {
-                    EtiquetaId = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Nombre = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    Color = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Etiquetas", x => x.EtiquetaId);
-                });
-
             migrationBuilder.CreateTable(
                 name: "Usuarios",
                 columns: table => new
@@ -82,6 +68,27 @@ namespace K.Data.Migrations
                         principalTable: "Tableros",
                         principalColumn: "TableroId",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Etiquetas",
+                columns: table => new
+                {
+                    EtiquetaId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Nombre = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    Color = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: true),
+                    TableroId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Etiquetas", x => x.EtiquetaId);
+                    table.ForeignKey(
+                        name: "FK_Etiquetas_Tableros_TableroId",
+                        column: x => x.TableroId,
+                        principalTable: "Tableros",
+                        principalColumn: "TableroId",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -144,7 +151,7 @@ namespace K.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "HistoriaEtiqueta",
+                name: "HistoriasEtiquetas",
                 columns: table => new
                 {
                     HistoriaId = table.Column<int>(type: "int", nullable: false),
@@ -152,15 +159,15 @@ namespace K.Data.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_HistoriaEtiqueta", x => new { x.HistoriaId, x.EtiquetaId });
+                    table.PrimaryKey("PK_HistoriasEtiquetas", x => new { x.HistoriaId, x.EtiquetaId });
                     table.ForeignKey(
-                        name: "FK_HistoriaEtiqueta_Etiquetas_EtiquetaId",
+                        name: "FK_HistoriasEtiquetas_Etiquetas_EtiquetaId",
                         column: x => x.EtiquetaId,
                         principalTable: "Etiquetas",
                         principalColumn: "EtiquetaId",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_HistoriaEtiqueta_HistoriasUsuario_HistoriaId",
+                        name: "FK_HistoriasEtiquetas_HistoriasUsuario_HistoriaId",
                         column: x => x.HistoriaId,
                         principalTable: "HistoriasUsuario",
                         principalColumn: "HistoriaId",
@@ -183,8 +190,14 @@ namespace K.Data.Migrations
                 column: "UsuarioId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_HistoriaEtiqueta_EtiquetaId",
-                table: "HistoriaEtiqueta",
+                name: "IX_Etiquetas_TableroId_Nombre",
+                table: "Etiquetas",
+                columns: new[] { "TableroId", "Nombre" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_HistoriasEtiquetas_EtiquetaId",
+                table: "HistoriasEtiquetas",
                 column: "EtiquetaId");
 
             migrationBuilder.CreateIndex(
@@ -210,7 +223,7 @@ namespace K.Data.Migrations
                 name: "Comentarios");
 
             migrationBuilder.DropTable(
-                name: "HistoriaEtiqueta");
+                name: "HistoriasEtiquetas");
 
             migrationBuilder.DropTable(
                 name: "Etiquetas");
