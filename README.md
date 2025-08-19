@@ -1,8 +1,4 @@
-Integrantes del grupo
 
--Jeremy Austin Hults Leandro
--
--
 
 Repositorio
 - https://github.com/fransalazar28/PAW_Kanban_G7
