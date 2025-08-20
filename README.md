@@ -1,46 +1,81 @@
+Kanban Web App (PAW_Kanban_G7)
+Open-source Kanban board built with ASP.NET Core 8.0.
+Includes a REST API, layered architecture, and a client-side MVC front end.
 
+Arquitectura
+Proyecto	Responsabilidad principal
+K.Models	Entidades y DTOs para tableros, columnas, historias y etiquetas
+KanbanData	KanbanDbContext y migraciones EF Core para SQL Server
+K.Repositories	Repositorios de acceso a datos (Historias/Etiquetas)
+K.Business	Servicios con lógica de negocio (p. ej. evitar etiquetas duplicadas)
+K2.API	API REST con controladores y DI/CORS configurados
+PAW_Kanban_G7	Interfaz MVC que consume la API vía JavaScript (fetch + drag‑and‑drop)
+Esquema de base de datos
+Tablas: Usuarios, Tableros, Columnas, Historias, Comentarios, Etiquetas y relación Historia–Etiqueta.
 
-Repositorio
-- https://github.com/fransalazar28/PAW_Kanban_G7
+Restricciones y borrados en cascada/Restrict según relación
 
-Arquitectura del proyecto
+OnConfiguring incluye un aviso para mover la cadena de conexión a appsettings.json antes de producción
 
-El sistema está desarrollado en arquitectura de múltiples capas y módulos:
--PAW_Kanban_G7: Aplicación ASP.NET Core MVC principal (controladores, vistas, autenticación)
--K.Models: Contiene todas las entidades de dominio como WidgetConfig, News, Guide, etc.
--K.Repositories: Implementación del patrón Repositorio para acceso a datos
--K.Business: Capa de lógica de negocio (preparada para futuras reglas)
--KanbanData: Implementa el DbContext de Entity Framework
--Kanban.API: Proyecto base para exponer APIs si se desea escalar
+API principales
+Método & Ruta	Función
+GET /api/historias/board/{tableroId}	Devuelve el tablero completo con columnas e historias
+POST /api/historias	Crea una nueva historia y responde con su id
+PATCH /api/historias/{id}/status	Reordena o mueve una historia entre columnas
+PUT /api/historias/{id} / DELETE /api/historias/{id}	Actualiza o elimina la historia indicada
+GET /api/etiquetas/board/{tableroId}	Lista etiquetas del tablero
+POST /api/etiquetas	Crea etiqueta, devolviendo 409 si el nombre está duplicado
+Interfaz MVC
+Carga tablero con Fetch y renderizado dinámico de columnas/tarjetas
 
-Paquetes NuGet utilizados
+Patch para mover tarjetas con drag‑and‑drop
 
--Microsoft.EntityFrameworkCore.SqlServer
--Microsoft.EntityFrameworkCore.Tools
--Microsoft.AspNetCore.Identity.EntityFrameworkCore
--Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation
--Microsoft.AspNetCore.Identity.UI
--Microsoft.VisualStudio.Web.CodeGeneration.Design
+Modales para crear/editar historias y asignar etiquetas
 
-Funcionalidad principal implementada
+Administración de etiquetas desde el cliente (crear/eliminar)
 
-Módulo WidgetConfig (K.Business)
-Implementa un sistema de configuración de widgets del dashboard:
+Instalación y ejecución
+Requisitos
 
--Crear, editar, eliminar y listar widgets personalizados
--Control de visibilidad: público, privado, por grupo
--Permite marcar widgets como favoritos y ocultarlos
--Asociación de widgets al usuario autenticado
--Persistencia en base de datos usando Entity Framework Core
--Vistas Razor funcionales e integradas al menú del sitio
+.NET 8 SDK
 
-Autenticación
-Uso de ASP.NET Core Identity
-Solo los usuarios autenticados pueden acceder a las funciones del sistema
+SQL Server
 
-Principios SOLID aplicados
-S: Separación de responsabilidades (modelo, repositorio, controlador, vistas)
-O: La clase WidgetConfig se puede extender sin modificar, por ejemplo, con validaciones adicionales
-L: Uso de interfaces ara inyectar dependencias (IWidgetConfigRepository)
-I: Repositorio enfocado solo en operaciones de WidgetConfig
-D: Inyección de dependencias configurada en Program.cs
+Configurar cadena de conexión
+
+Añadir DefaultConnection en K2.API/appsettings.json o vía variables de entorno.
+
+Alternativamente, modificar KanbanDbContext para usar un origen distinto.
+
+Aplicar migraciones
+
+dotnet ef database update \
+    --project KanbanData/K.Data.csproj \
+    --startup-project K2.API/K2.API.csproj
+Ejecutar API
+
+dotnet run --project K2.API/K2.API.csproj
+Ejecutar interfaz MVC
+
+dotnet run --project PAW_Kanban_G7/PAW_Kanban_G7.csproj
+Abrir https://localhost:{puerto}/Board?id={tableroId}.
+
+Características
+CRUD completo de historias con repositorio asíncrono.
+
+Reordenamiento de historias recalculando índice interno.
+
+Etiquetas coloreables con unicidad por tablero.
+
+Interfaz drag‑and‑drop con modales y color picker.
+
+Proyecto pensado para expansión (ej. añadir Identity).
+
+Futuras mejoras
+Autenticación con ASP.NET Identity.
+
+Manejo centralizado de cadena de conexión y secrets.
+
+Cobertura de pruebas e incorporación de más tableros/usuarios.
+
+¡Listo para clonar, ejecutar y extender!
