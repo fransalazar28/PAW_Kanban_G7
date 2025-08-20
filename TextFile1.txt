@@ -1,58 +1,403 @@
-CREATE TABLE Usuarios (
-  UsuarioId INT IDENTITY(1,1) PRIMARY KEY,
-  NombreUsuario NVARCHAR(50) NOT NULL UNIQUE,
-  Email NVARCHAR(100) NOT NULL UNIQUE,
-  PasswordHash NVARCHAR(200) NOT NULL,
-  FechaCreacion DATETIME2 NOT NULL DEFAULT GETDATE()
-);
+USE [master]
+GO
+/****** Object:  Database [KanbanDB]    Script Date: 8/20/2025 2:44:42 PM ******/
+CREATE DATABASE [KanbanDB]
+ CONTAINMENT = NONE
+ ON  PRIMARY 
+( NAME = N'KanbanDB', FILENAME = N'C:\Program Files\Microsoft SQL Server\MSSQL16.MSSQLSERVER\MSSQL\DATA\KanbanDB.mdf' , SIZE = 8192KB , MAXSIZE = UNLIMITED, FILEGROWTH = 65536KB )
+ LOG ON 
+( NAME = N'KanbanDB_log', FILENAME = N'C:\Program Files\Microsoft SQL Server\MSSQL16.MSSQLSERVER\MSSQL\DATA\KanbanDB_log.ldf' , SIZE = 8192KB , MAXSIZE = 2048GB , FILEGROWTH = 65536KB )
+ WITH CATALOG_COLLATION = DATABASE_DEFAULT, LEDGER = OFF
+GO
+ALTER DATABASE [KanbanDB] SET COMPATIBILITY_LEVEL = 160
+GO
+IF (1 = FULLTEXTSERVICEPROPERTY('IsFullTextInstalled'))
+begin
+EXEC [KanbanDB].[dbo].[sp_fulltext_database] @action = 'enable'
+end
+GO
+ALTER DATABASE [KanbanDB] SET ANSI_NULL_DEFAULT OFF 
+GO
+ALTER DATABASE [KanbanDB] SET ANSI_NULLS OFF 
+GO
+ALTER DATABASE [KanbanDB] SET ANSI_PADDING OFF 
+GO
+ALTER DATABASE [KanbanDB] SET ANSI_WARNINGS OFF 
+GO
+ALTER DATABASE [KanbanDB] SET ARITHABORT OFF 
+GO
+ALTER DATABASE [KanbanDB] SET AUTO_CLOSE OFF 
+GO
+ALTER DATABASE [KanbanDB] SET AUTO_SHRINK OFF 
+GO
+ALTER DATABASE [KanbanDB] SET AUTO_UPDATE_STATISTICS ON 
+GO
+ALTER DATABASE [KanbanDB] SET CURSOR_CLOSE_ON_COMMIT OFF 
+GO
+ALTER DATABASE [KanbanDB] SET CURSOR_DEFAULT  GLOBAL 
+GO
+ALTER DATABASE [KanbanDB] SET CONCAT_NULL_YIELDS_NULL OFF 
+GO
+ALTER DATABASE [KanbanDB] SET NUMERIC_ROUNDABORT OFF 
+GO
+ALTER DATABASE [KanbanDB] SET QUOTED_IDENTIFIER OFF 
+GO
+ALTER DATABASE [KanbanDB] SET RECURSIVE_TRIGGERS OFF 
+GO
+ALTER DATABASE [KanbanDB] SET  ENABLE_BROKER 
+GO
+ALTER DATABASE [KanbanDB] SET AUTO_UPDATE_STATISTICS_ASYNC OFF 
+GO
+ALTER DATABASE [KanbanDB] SET DATE_CORRELATION_OPTIMIZATION OFF 
+GO
+ALTER DATABASE [KanbanDB] SET TRUSTWORTHY OFF 
+GO
+ALTER DATABASE [KanbanDB] SET ALLOW_SNAPSHOT_ISOLATION OFF 
+GO
+ALTER DATABASE [KanbanDB] SET PARAMETERIZATION SIMPLE 
+GO
+ALTER DATABASE [KanbanDB] SET READ_COMMITTED_SNAPSHOT ON 
+GO
+ALTER DATABASE [KanbanDB] SET HONOR_BROKER_PRIORITY OFF 
+GO
+ALTER DATABASE [KanbanDB] SET RECOVERY FULL 
+GO
+ALTER DATABASE [KanbanDB] SET  MULTI_USER 
+GO
+ALTER DATABASE [KanbanDB] SET PAGE_VERIFY CHECKSUM  
+GO
+ALTER DATABASE [KanbanDB] SET DB_CHAINING OFF 
+GO
+ALTER DATABASE [KanbanDB] SET FILESTREAM( NON_TRANSACTED_ACCESS = OFF ) 
+GO
+ALTER DATABASE [KanbanDB] SET TARGET_RECOVERY_TIME = 60 SECONDS 
+GO
+ALTER DATABASE [KanbanDB] SET DELAYED_DURABILITY = DISABLED 
+GO
+ALTER DATABASE [KanbanDB] SET ACCELERATED_DATABASE_RECOVERY = OFF  
+GO
+EXEC sys.sp_db_vardecimal_storage_format N'KanbanDB', N'ON'
+GO
+ALTER DATABASE [KanbanDB] SET QUERY_STORE = ON
+GO
+ALTER DATABASE [KanbanDB] SET QUERY_STORE (OPERATION_MODE = READ_WRITE, CLEANUP_POLICY = (STALE_QUERY_THRESHOLD_DAYS = 30), DATA_FLUSH_INTERVAL_SECONDS = 900, INTERVAL_LENGTH_MINUTES = 60, MAX_STORAGE_SIZE_MB = 1000, QUERY_CAPTURE_MODE = AUTO, SIZE_BASED_CLEANUP_MODE = AUTO, MAX_PLANS_PER_QUERY = 200, WAIT_STATS_CAPTURE_MODE = ON)
+GO
+USE [KanbanDB]
+GO
+/****** Object:  Table [dbo].[__EFMigrationsHistory]    Script Date: 8/20/2025 2:44:42 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[__EFMigrationsHistory](
+	[MigrationId] [nvarchar](150) NOT NULL,
+	[ProductVersion] [nvarchar](32) NOT NULL,
+ CONSTRAINT [PK___EFMigrationsHistory] PRIMARY KEY CLUSTERED 
+(
+	[MigrationId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[Columnas]    Script Date: 8/20/2025 2:44:42 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Columnas](
+	[ColumnaId] [int] IDENTITY(1,1) NOT NULL,
+	[Nombre] [nvarchar](50) NOT NULL,
+	[Orden] [int] NOT NULL,
+	[TableroId] [int] NOT NULL,
+ CONSTRAINT [PK_Columnas] PRIMARY KEY CLUSTERED 
+(
+	[ColumnaId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[Comentarios]    Script Date: 8/20/2025 2:44:42 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Comentarios](
+	[ComentarioId] [int] IDENTITY(1,1) NOT NULL,
+	[HistoriaId] [int] NOT NULL,
+	[UsuarioId] [int] NOT NULL,
+	[Texto] [nvarchar](max) NOT NULL,
+	[FechaRegistro] [datetime2](7) NOT NULL,
+ CONSTRAINT [PK_Comentarios] PRIMARY KEY CLUSTERED 
+(
+	[ComentarioId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[Etiquetas]    Script Date: 8/20/2025 2:44:42 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Etiquetas](
+	[EtiquetaId] [int] IDENTITY(1,1) NOT NULL,
+	[Nombre] [nvarchar](50) NOT NULL,
+	[Color] [nvarchar](20) NULL,
+	[TableroId] [int] NOT NULL,
+ CONSTRAINT [PK_Etiquetas] PRIMARY KEY CLUSTERED 
+(
+	[EtiquetaId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[HistoriasEtiquetas]    Script Date: 8/20/2025 2:44:42 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[HistoriasEtiquetas](
+	[HistoriaId] [int] NOT NULL,
+	[EtiquetaId] [int] NOT NULL,
+ CONSTRAINT [PK_HistoriasEtiquetas] PRIMARY KEY CLUSTERED 
+(
+	[HistoriaId] ASC,
+	[EtiquetaId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[HistoriasUsuario]    Script Date: 8/20/2025 2:44:42 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[HistoriasUsuario](
+	[HistoriaId] [int] IDENTITY(1,1) NOT NULL,
+	[Titulo] [nvarchar](150) NOT NULL,
+	[Descripcion] [nvarchar](4000) NULL,
+	[ColumnaId] [int] NOT NULL,
+	[Orden] [int] NOT NULL,
+	[ResponsableId] [int] NULL,
+	[FechaCreacion] [datetime2](7) NOT NULL,
+	[FechaVencimiento] [datetime2](7) NULL,
+ CONSTRAINT [PK_HistoriasUsuario] PRIMARY KEY CLUSTERED 
+(
+	[HistoriaId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[Tableros]    Script Date: 8/20/2025 2:44:42 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Tableros](
+	[TableroId] [int] IDENTITY(1,1) NOT NULL,
+	[Titulo] [nvarchar](100) NOT NULL,
+	[Descripcion] [nvarchar](500) NULL,
+	[UsuarioId] [int] NOT NULL,
+	[FechaCreacion] [datetime2](7) NOT NULL,
+ CONSTRAINT [PK_Tableros] PRIMARY KEY CLUSTERED 
+(
+	[TableroId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[Usuarios]    Script Date: 8/20/2025 2:44:42 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Usuarios](
+	[UsuarioId] [int] IDENTITY(1,1) NOT NULL,
+	[NombreUsuario] [nvarchar](50) NOT NULL,
+	[Email] [nvarchar](100) NOT NULL,
+	[PasswordHash] [nvarchar](200) NOT NULL,
+	[FechaCreacion] [datetime2](7) NOT NULL,
+ CONSTRAINT [PK_Usuarios] PRIMARY KEY CLUSTERED 
+(
+	[UsuarioId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+INSERT [dbo].[__EFMigrationsHistory] ([MigrationId], [ProductVersion]) VALUES (N'20250818020704_InitKanban_Restrict2', N'9.0.8')
+GO
+SET IDENTITY_INSERT [dbo].[Columnas] ON 
 
+INSERT [dbo].[Columnas] ([ColumnaId], [Nombre], [Orden], [TableroId]) VALUES (1, N'Backlog', 1, 1)
+INSERT [dbo].[Columnas] ([ColumnaId], [Nombre], [Orden], [TableroId]) VALUES (2, N'In Progress', 2, 1)
+INSERT [dbo].[Columnas] ([ColumnaId], [Nombre], [Orden], [TableroId]) VALUES (3, N'Review', 3, 1)
+INSERT [dbo].[Columnas] ([ColumnaId], [Nombre], [Orden], [TableroId]) VALUES (4, N'Merge', 4, 1)
+INSERT [dbo].[Columnas] ([ColumnaId], [Nombre], [Orden], [TableroId]) VALUES (5, N'Backlog', 1, 2)
+INSERT [dbo].[Columnas] ([ColumnaId], [Nombre], [Orden], [TableroId]) VALUES (6, N'In Progress', 2, 2)
+INSERT [dbo].[Columnas] ([ColumnaId], [Nombre], [Orden], [TableroId]) VALUES (7, N'Review', 3, 2)
+INSERT [dbo].[Columnas] ([ColumnaId], [Nombre], [Orden], [TableroId]) VALUES (8, N'Merge', 4, 2)
+INSERT [dbo].[Columnas] ([ColumnaId], [Nombre], [Orden], [TableroId]) VALUES (9, N'Backlog', 1, 3)
+INSERT [dbo].[Columnas] ([ColumnaId], [Nombre], [Orden], [TableroId]) VALUES (10, N'In Progress', 2, 3)
+INSERT [dbo].[Columnas] ([ColumnaId], [Nombre], [Orden], [TableroId]) VALUES (11, N'Review', 3, 3)
+INSERT [dbo].[Columnas] ([ColumnaId], [Nombre], [Orden], [TableroId]) VALUES (12, N'Merge', 4, 3)
+SET IDENTITY_INSERT [dbo].[Columnas] OFF
+GO
+SET IDENTITY_INSERT [dbo].[Etiquetas] ON 
 
-CREATE TABLE Tableros (
-  TableroId INT IDENTITY(1,1) PRIMARY KEY,
-  Titulo NVARCHAR(100) NOT NULL,
-  Descripcion NVARCHAR(500) NULL,
-  UsuarioId INT NOT NULL REFERENCES Usuarios(UsuarioId),
-  FechaCreacion DATETIME2 NOT NULL DEFAULT GETDATE()
-);
+INSERT [dbo].[Etiquetas] ([EtiquetaId], [Nombre], [Color], [TableroId]) VALUES (1, N'Bug', N'#e74c3c', 1)
+INSERT [dbo].[Etiquetas] ([EtiquetaId], [Nombre], [Color], [TableroId]) VALUES (2, N'Feature', N'#27ae60', 1)
+INSERT [dbo].[Etiquetas] ([EtiquetaId], [Nombre], [Color], [TableroId]) VALUES (3, N'Urgente', N'#f1c40f', 1)
+INSERT [dbo].[Etiquetas] ([EtiquetaId], [Nombre], [Color], [TableroId]) VALUES (4, N'Bug', N'#e74c3c', 2)
+INSERT [dbo].[Etiquetas] ([EtiquetaId], [Nombre], [Color], [TableroId]) VALUES (5, N'Feature', N'#27ae60', 2)
+INSERT [dbo].[Etiquetas] ([EtiquetaId], [Nombre], [Color], [TableroId]) VALUES (6, N'Urgente', N'#f1c40f', 2)
+INSERT [dbo].[Etiquetas] ([EtiquetaId], [Nombre], [Color], [TableroId]) VALUES (15, N'PAW', N'#00ACC1', 3)
+INSERT [dbo].[Etiquetas] ([EtiquetaId], [Nombre], [Color], [TableroId]) VALUES (17, N'charlie puth', N'#1E88E5', 3)
+INSERT [dbo].[Etiquetas] ([EtiquetaId], [Nombre], [Color], [TableroId]) VALUES (18, N'OWO', N'#172B4D', 3)
+INSERT [dbo].[Etiquetas] ([EtiquetaId], [Nombre], [Color], [TableroId]) VALUES (19, N'CLORIAAA', N'#FF78CB', 3)
+INSERT [dbo].[Etiquetas] ([EtiquetaId], [Nombre], [Color], [TableroId]) VALUES (20, N'hola', N'#C7190D', 3)
+SET IDENTITY_INSERT [dbo].[Etiquetas] OFF
+GO
+INSERT [dbo].[HistoriasEtiquetas] ([HistoriaId], [EtiquetaId]) VALUES (11, 15)
+INSERT [dbo].[HistoriasEtiquetas] ([HistoriaId], [EtiquetaId]) VALUES (12, 15)
+INSERT [dbo].[HistoriasEtiquetas] ([HistoriaId], [EtiquetaId]) VALUES (14, 15)
+INSERT [dbo].[HistoriasEtiquetas] ([HistoriaId], [EtiquetaId]) VALUES (8, 17)
+INSERT [dbo].[HistoriasEtiquetas] ([HistoriaId], [EtiquetaId]) VALUES (7, 19)
+GO
+SET IDENTITY_INSERT [dbo].[HistoriasUsuario] ON 
 
+INSERT [dbo].[HistoriasUsuario] ([HistoriaId], [Titulo], [Descripcion], [ColumnaId], [Orden], [ResponsableId], [FechaCreacion], [FechaVencimiento]) VALUES (1, N'Configurar CI', N'Agregar GitHub Actions', 1, 1, NULL, CAST(N'2025-08-17T20:12:38.9433333' AS DateTime2), CAST(N'2025-08-24T20:12:38.9433333' AS DateTime2))
+INSERT [dbo].[HistoriasUsuario] ([HistoriaId], [Titulo], [Descripcion], [ColumnaId], [Orden], [ResponsableId], [FechaCreacion], [FechaVencimiento]) VALUES (2, N'Configurar CI', N'Agregar GitHub Actions', 5, 1, NULL, CAST(N'2025-08-17T20:12:57.1100000' AS DateTime2), CAST(N'2025-08-24T20:12:57.1100000' AS DateTime2))
+INSERT [dbo].[HistoriasUsuario] ([HistoriaId], [Titulo], [Descripcion], [ColumnaId], [Orden], [ResponsableId], [FechaCreacion], [FechaVencimiento]) VALUES (3, N'Tarea demo', N'ejemplo', 10, 1, NULL, CAST(N'2025-08-17T20:39:03.7266667' AS DateTime2), NULL)
+INSERT [dbo].[HistoriasUsuario] ([HistoriaId], [Titulo], [Descripcion], [ColumnaId], [Orden], [ResponsableId], [FechaCreacion], [FechaVencimiento]) VALUES (7, N'ETHEL CAIN I WILL ALWAYS LOVE YOU', N'meow', 11, 1, NULL, CAST(N'2025-08-18T23:48:58.2126845' AS DateTime2), NULL)
+INSERT [dbo].[HistoriasUsuario] ([HistoriaId], [Titulo], [Descripcion], [ColumnaId], [Orden], [ResponsableId], [FechaCreacion], [FechaVencimiento]) VALUES (8, N'aaaa', NULL, 12, 1, NULL, CAST(N'2025-08-19T01:18:00.5423354' AS DateTime2), NULL)
+INSERT [dbo].[HistoriasUsuario] ([HistoriaId], [Titulo], [Descripcion], [ColumnaId], [Orden], [ResponsableId], [FechaCreacion], [FechaVencimiento]) VALUES (11, N'Tarea demo2', N'KAJIOJDKJJDIJSHISWHGIDHSUIHJHDSJHDSJHSOUHDSUOHSDUHSAUHSUHSUIHDUISHSDUIHSDUHDSHDSUHDSUSHDUISDHUJIDSHUJISDHUIJSDHSUIDHUSDIHDSUHDSHJSD
+ASDDSSDS', 12, 2, NULL, CAST(N'2025-08-19T02:23:25.7508238' AS DateTime2), CAST(N'2025-08-31T06:00:00.0000000' AS DateTime2))
+INSERT [dbo].[HistoriasUsuario] ([HistoriaId], [Titulo], [Descripcion], [ColumnaId], [Orden], [ResponsableId], [FechaCreacion], [FechaVencimiento]) VALUES (12, N'Tarea demo', N'Tarea demo descripción', 9, 1, NULL, CAST(N'2025-08-19T17:21:27.4948315' AS DateTime2), CAST(N'2025-08-28T06:00:00.0000000' AS DateTime2))
+INSERT [dbo].[HistoriasUsuario] ([HistoriaId], [Titulo], [Descripcion], [ColumnaId], [Orden], [ResponsableId], [FechaCreacion], [FechaVencimiento]) VALUES (14, N'demo 4', N'dsdrr', 11, 2, NULL, CAST(N'2025-08-19T23:55:06.9947157' AS DateTime2), NULL)
+SET IDENTITY_INSERT [dbo].[HistoriasUsuario] OFF
+GO
+SET IDENTITY_INSERT [dbo].[Tableros] ON 
 
-CREATE TABLE Columnas (
-  ColumnaId INT IDENTITY(1,1) PRIMARY KEY,
-  Nombre NVARCHAR(50) NOT NULL,
-  Orden INT NOT NULL,
-  TableroId INT NOT NULL REFERENCES Tableros(TableroId)
-);
+INSERT [dbo].[Tableros] ([TableroId], [Titulo], [Descripcion], [UsuarioId], [FechaCreacion]) VALUES (1, N'Proyecto Demo', N'Tablero inicial', 2, CAST(N'2025-08-17T20:12:38.9400000' AS DateTime2))
+INSERT [dbo].[Tableros] ([TableroId], [Titulo], [Descripcion], [UsuarioId], [FechaCreacion]) VALUES (2, N'Proyecto Demo', N'Tablero inicial', 3, CAST(N'2025-08-17T20:12:57.1100000' AS DateTime2))
+INSERT [dbo].[Tableros] ([TableroId], [Titulo], [Descripcion], [UsuarioId], [FechaCreacion]) VALUES (3, N'Board 1', N'', 4, CAST(N'2025-08-17T20:39:03.7266667' AS DateTime2))
+SET IDENTITY_INSERT [dbo].[Tableros] OFF
+GO
+SET IDENTITY_INSERT [dbo].[Usuarios] ON 
 
-
-CREATE TABLE HistoriasUsuario (
-  HistoriaId INT IDENTITY(1,1) PRIMARY KEY,
-  Titulo NVARCHAR(150) NOT NULL,
-  Descripcion NVARCHAR(MAX) NULL,
-  Estado NVARCHAR(50) NOT NULL,
-  ColumnaId INT NOT NULL REFERENCES Columnas(ColumnaId),
-  ResponsableId INT NULL REFERENCES Usuarios(UsuarioId),
-  FechaCreacion DATETIME2 NOT NULL DEFAULT GETDATE(),
-  FechaVencimiento DATE NULL
-);
-
-
-CREATE TABLE Comentarios (
-  ComentarioId INT IDENTITY(1,1) PRIMARY KEY,
-  HistoriaId INT NOT NULL REFERENCES HistoriasUsuario(HistoriaId),
-  UsuarioId INT NOT NULL REFERENCES Usuarios(UsuarioId),
-  Texto NVARCHAR(MAX) NOT NULL,
-  FechaRegistro DATETIME2 NOT NULL DEFAULT GETDATE()
-);
-
-
-CREATE TABLE Etiquetas (
-  EtiquetaId INT IDENTITY(1,1) PRIMARY KEY,
-  Nombre NVARCHAR(50) NOT NULL UNIQUE,
-  Color NVARCHAR(20) NULL
-);
-
-CREATE TABLE HistoriaEtiqueta (
-  HistoriaId INT NOT NULL REFERENCES HistoriasUsuario(HistoriaId),
-  EtiquetaId INT NOT NULL REFERENCES Etiquetas(EtiquetaId),
-  PRIMARY KEY (HistoriaId, EtiquetaId)
-);
+INSERT [dbo].[Usuarios] ([UsuarioId], [NombreUsuario], [Email], [PasswordHash], [FechaCreacion]) VALUES (1, N'demo', N'demo@demo.com', N'hash', CAST(N'2025-08-17T20:12:25.1900000' AS DateTime2))
+INSERT [dbo].[Usuarios] ([UsuarioId], [NombreUsuario], [Email], [PasswordHash], [FechaCreacion]) VALUES (2, N'demo', N'demo@demo.com', N'hash', CAST(N'2025-08-17T20:12:38.9400000' AS DateTime2))
+INSERT [dbo].[Usuarios] ([UsuarioId], [NombreUsuario], [Email], [PasswordHash], [FechaCreacion]) VALUES (3, N'demo', N'demo@demo.com', N'hash', CAST(N'2025-08-17T20:12:57.1100000' AS DateTime2))
+INSERT [dbo].[Usuarios] ([UsuarioId], [NombreUsuario], [Email], [PasswordHash], [FechaCreacion]) VALUES (4, N'demo', N'demo@kanban.test', N'x', CAST(N'2025-08-17T20:23:38.1466667' AS DateTime2))
+SET IDENTITY_INSERT [dbo].[Usuarios] OFF
+GO
+/****** Object:  Index [IX_Columnas_TableroId]    Script Date: 8/20/2025 2:44:42 PM ******/
+CREATE NONCLUSTERED INDEX [IX_Columnas_TableroId] ON [dbo].[Columnas]
+(
+	[TableroId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+GO
+/****** Object:  Index [IX_Comentarios_HistoriaId]    Script Date: 8/20/2025 2:44:42 PM ******/
+CREATE NONCLUSTERED INDEX [IX_Comentarios_HistoriaId] ON [dbo].[Comentarios]
+(
+	[HistoriaId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+GO
+/****** Object:  Index [IX_Comentarios_UsuarioId]    Script Date: 8/20/2025 2:44:42 PM ******/
+CREATE NONCLUSTERED INDEX [IX_Comentarios_UsuarioId] ON [dbo].[Comentarios]
+(
+	[UsuarioId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+GO
+SET ANSI_PADDING ON
+GO
+/****** Object:  Index [IX_Etiquetas_TableroId_Nombre]    Script Date: 8/20/2025 2:44:42 PM ******/
+CREATE UNIQUE NONCLUSTERED INDEX [IX_Etiquetas_TableroId_Nombre] ON [dbo].[Etiquetas]
+(
+	[TableroId] ASC,
+	[Nombre] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+GO
+/****** Object:  Index [IX_HistoriasEtiquetas_EtiquetaId]    Script Date: 8/20/2025 2:44:42 PM ******/
+CREATE NONCLUSTERED INDEX [IX_HistoriasEtiquetas_EtiquetaId] ON [dbo].[HistoriasEtiquetas]
+(
+	[EtiquetaId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+GO
+/****** Object:  Index [IX_HistoriasUsuario_ColumnaId_Orden]    Script Date: 8/20/2025 2:44:42 PM ******/
+CREATE NONCLUSTERED INDEX [IX_HistoriasUsuario_ColumnaId_Orden] ON [dbo].[HistoriasUsuario]
+(
+	[ColumnaId] ASC,
+	[Orden] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+GO
+/****** Object:  Index [IX_HistoriasUsuario_ResponsableId]    Script Date: 8/20/2025 2:44:42 PM ******/
+CREATE NONCLUSTERED INDEX [IX_HistoriasUsuario_ResponsableId] ON [dbo].[HistoriasUsuario]
+(
+	[ResponsableId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+GO
+/****** Object:  Index [IX_Tableros_UsuarioId]    Script Date: 8/20/2025 2:44:42 PM ******/
+CREATE NONCLUSTERED INDEX [IX_Tableros_UsuarioId] ON [dbo].[Tableros]
+(
+	[UsuarioId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+GO
+ALTER TABLE [dbo].[Comentarios] ADD  DEFAULT (getdate()) FOR [FechaRegistro]
+GO
+ALTER TABLE [dbo].[HistoriasUsuario] ADD  DEFAULT ((2147483647)) FOR [Orden]
+GO
+ALTER TABLE [dbo].[HistoriasUsuario] ADD  DEFAULT (getdate()) FOR [FechaCreacion]
+GO
+ALTER TABLE [dbo].[Tableros] ADD  DEFAULT (getdate()) FOR [FechaCreacion]
+GO
+ALTER TABLE [dbo].[Usuarios] ADD  DEFAULT (getdate()) FOR [FechaCreacion]
+GO
+ALTER TABLE [dbo].[Columnas]  WITH CHECK ADD  CONSTRAINT [FK_Columnas_Tableros_TableroId] FOREIGN KEY([TableroId])
+REFERENCES [dbo].[Tableros] ([TableroId])
+ON DELETE CASCADE
+GO
+ALTER TABLE [dbo].[Columnas] CHECK CONSTRAINT [FK_Columnas_Tableros_TableroId]
+GO
+ALTER TABLE [dbo].[Comentarios]  WITH CHECK ADD  CONSTRAINT [FK_Comentarios_HistoriasUsuario_HistoriaId] FOREIGN KEY([HistoriaId])
+REFERENCES [dbo].[HistoriasUsuario] ([HistoriaId])
+ON DELETE CASCADE
+GO
+ALTER TABLE [dbo].[Comentarios] CHECK CONSTRAINT [FK_Comentarios_HistoriasUsuario_HistoriaId]
+GO
+ALTER TABLE [dbo].[Comentarios]  WITH CHECK ADD  CONSTRAINT [FK_Comentarios_Usuarios_UsuarioId] FOREIGN KEY([UsuarioId])
+REFERENCES [dbo].[Usuarios] ([UsuarioId])
+ON DELETE CASCADE
+GO
+ALTER TABLE [dbo].[Comentarios] CHECK CONSTRAINT [FK_Comentarios_Usuarios_UsuarioId]
+GO
+ALTER TABLE [dbo].[Etiquetas]  WITH CHECK ADD  CONSTRAINT [FK_Etiquetas_Tableros_TableroId] FOREIGN KEY([TableroId])
+REFERENCES [dbo].[Tableros] ([TableroId])
+GO
+ALTER TABLE [dbo].[Etiquetas] CHECK CONSTRAINT [FK_Etiquetas_Tableros_TableroId]
+GO
+ALTER TABLE [dbo].[HistoriasEtiquetas]  WITH CHECK ADD  CONSTRAINT [FK_HistoriasEtiquetas_Etiquetas_EtiquetaId] FOREIGN KEY([EtiquetaId])
+REFERENCES [dbo].[Etiquetas] ([EtiquetaId])
+ON DELETE CASCADE
+GO
+ALTER TABLE [dbo].[HistoriasEtiquetas] CHECK CONSTRAINT [FK_HistoriasEtiquetas_Etiquetas_EtiquetaId]
+GO
+ALTER TABLE [dbo].[HistoriasEtiquetas]  WITH CHECK ADD  CONSTRAINT [FK_HistoriasEtiquetas_HistoriasUsuario_HistoriaId] FOREIGN KEY([HistoriaId])
+REFERENCES [dbo].[HistoriasUsuario] ([HistoriaId])
+ON DELETE CASCADE
+GO
+ALTER TABLE [dbo].[HistoriasEtiquetas] CHECK CONSTRAINT [FK_HistoriasEtiquetas_HistoriasUsuario_HistoriaId]
+GO
+ALTER TABLE [dbo].[HistoriasUsuario]  WITH CHECK ADD  CONSTRAINT [FK_HistoriasUsuario_Columnas_ColumnaId] FOREIGN KEY([ColumnaId])
+REFERENCES [dbo].[Columnas] ([ColumnaId])
+ON DELETE CASCADE
+GO
+ALTER TABLE [dbo].[HistoriasUsuario] CHECK CONSTRAINT [FK_HistoriasUsuario_Columnas_ColumnaId]
+GO
+ALTER TABLE [dbo].[HistoriasUsuario]  WITH CHECK ADD  CONSTRAINT [FK_HistoriasUsuario_Usuarios_ResponsableId] FOREIGN KEY([ResponsableId])
+REFERENCES [dbo].[Usuarios] ([UsuarioId])
+ON DELETE SET NULL
+GO
+ALTER TABLE [dbo].[HistoriasUsuario] CHECK CONSTRAINT [FK_HistoriasUsuario_Usuarios_ResponsableId]
+GO
+ALTER TABLE [dbo].[Tableros]  WITH CHECK ADD  CONSTRAINT [FK_Tableros_Usuarios_UsuarioId] FOREIGN KEY([UsuarioId])
+REFERENCES [dbo].[Usuarios] ([UsuarioId])
+GO
+ALTER TABLE [dbo].[Tableros] CHECK CONSTRAINT [FK_Tableros_Usuarios_UsuarioId]
+GO
+USE [master]
+GO
+ALTER DATABASE [KanbanDB] SET  READ_WRITE 
+GO
