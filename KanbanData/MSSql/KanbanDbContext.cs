@@ -24,7 +24,7 @@ namespace K.Data.MSSql
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // ============= USUARIOS =================
+            
             modelBuilder.Entity<Usuario>(entity =>
             {
                 entity.ToTable("Usuarios");
@@ -35,7 +35,7 @@ namespace K.Data.MSSql
                 entity.Property(e => e.FechaCreacion).HasDefaultValueSql("GETDATE()");
             });
 
-            // ============= TABLEROS =================
+            
             modelBuilder.Entity<Tablero>(entity =>
             {
                 entity.ToTable("Tableros");
@@ -49,7 +49,7 @@ namespace K.Data.MSSql
                       .OnDelete(DeleteBehavior.Restrict);
             });
 
-            // ============= COLUMNAS =================
+            
             modelBuilder.Entity<Columna>(entity =>
             {
                 entity.ToTable("Columnas");
@@ -62,7 +62,7 @@ namespace K.Data.MSSql
                       .OnDelete(DeleteBehavior.Cascade);
             });
 
-            // ============= HISTORIAS (HistoriasUsuario) =================
+            
             modelBuilder.Entity<Historia>(entity =>
             {
                 entity.ToTable("HistoriasUsuario");
@@ -73,23 +73,23 @@ namespace K.Data.MSSql
                 entity.Property(e => e.FechaCreacion).HasDefaultValueSql("GETDATE()");
                 entity.Property(e => e.Orden).HasDefaultValue(int.MaxValue);
 
-                // Columna (1)─(N) Historias
+                
                 entity.HasOne(e => e.Columna)
                       .WithMany(c => c.Historias)
                       .HasForeignKey(e => e.ColumnaId)
                       .OnDelete(DeleteBehavior.Cascade);
 
-                // Responsable opcional
+              
                 entity.HasOne(e => e.Responsable)
                       .WithMany(u => u.HistoriasAsignadas)
                       .HasForeignKey(e => e.ResponsableId)
                       .OnDelete(DeleteBehavior.SetNull);
 
-                // Orden por columna
+               
                 entity.HasIndex(e => new { e.ColumnaId, e.Orden });
             });
 
-            // ============= COMENTARIOS =================
+           
             modelBuilder.Entity<Comentario>(entity =>
             {
                 entity.ToTable("Comentarios");
@@ -108,7 +108,7 @@ namespace K.Data.MSSql
                       .OnDelete(DeleteBehavior.Cascade);
             });
 
-            // Etiquetas
+            
             modelBuilder.Entity<Etiqueta>(entity =>
             {
                 entity.ToTable("Etiquetas");
@@ -116,16 +116,16 @@ namespace K.Data.MSSql
                 entity.Property(e => e.Nombre).IsRequired().HasMaxLength(50);
                 entity.Property(e => e.Color).HasMaxLength(20);
 
-                // Usa la propiedad real TableroId y RESTRICT
+                
                 entity.HasOne(e => e.Tablero)
                       .WithMany(t => t.Etiquetas)
                       .HasForeignKey(e => e.TableroId)
-                      .OnDelete(DeleteBehavior.Restrict); // << clave del fix
+                      .OnDelete(DeleteBehavior.Restrict); 
 
                 entity.HasIndex(e => new { e.TableroId, e.Nombre }).IsUnique();
             });
 
-            // Join HistoriasEtiquetas
+            
             modelBuilder.Entity<HistoriaEtiqueta>(entity =>
             {
                 entity.ToTable("HistoriasEtiquetas");

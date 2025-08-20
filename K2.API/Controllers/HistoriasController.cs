@@ -70,10 +70,10 @@ public class HistoriasController : ControllerBase
         await _tags.RemoveFromHistoriaAsync(historiaId, etiquetaId);
         return NoContent();
     }
-    // DTO para el PUT masivo
+   
     public record UpdateEtiquetasRequest(List<int> EtiquetaIds);
 
-    // GET: api/historias/{id}/etiquetas
+    
     [HttpGet("{id:int}/etiquetas")]
     public async Task<ActionResult<IEnumerable<EtiquetaMiniDto>>> GetEtiquetasDeHistoria(
         int id,
@@ -95,7 +95,7 @@ public class HistoriasController : ControllerBase
         return Ok(list);
     }
 
-    // PUT: api/historias/{id}/etiquetas  (reemplaza todas)
+    
     [HttpPut("{id:int}/etiquetas")]
     public async Task<IActionResult> SetEtiquetasDeHistoria(
         int id,
@@ -109,11 +109,11 @@ public class HistoriasController : ControllerBase
             .Where(x => x.HistoriaId == id)
             .ToListAsync(ct);
 
-        // quitar los que ya no estén
+       
         var quitar = actuales.Where(x => !nuevos.Contains(x.EtiquetaId)).ToList();
         if (quitar.Count > 0) db.HistoriaEtiquetas.RemoveRange(quitar);
 
-        // agregar faltantes
+       
         var actualesIds = actuales.Select(x => x.EtiquetaId).ToHashSet();
         var agregar = nuevos.Except(actualesIds)
             .Select(etqId => new HistoriaEtiqueta { HistoriaId = id, EtiquetaId = etqId })
